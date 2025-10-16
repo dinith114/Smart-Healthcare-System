@@ -24,6 +24,11 @@ exports.login = async (req, res) => {
     const user = await User.findOne({ username });
     if (!user) return res.status(401).json({ message: "Invalid credentials" });
 
+    // Check if user account is active
+    if (user.status === "INACTIVE") {
+      return res.status(403).json({ message: "Your account has been deactivated. Please contact the administrator." });
+    }
+
     const valid = await user.validatePassword(password);
     if (!valid) return res.status(401).json({ message: "Invalid credentials" });
 

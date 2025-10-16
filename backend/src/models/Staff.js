@@ -1,57 +1,44 @@
 const { Schema, model } = require("mongoose");
 
-const PatientSchema = new Schema({
+const StaffSchema = new Schema({
   userId: {
     type: Schema.Types.ObjectId,
     ref: "User",
     required: true,
     unique: true
   },
-  name: {
+  fullName: {
     type: String,
     required: true,
-    trim: true,
+    trim: true
   },
   email: {
     type: String,
     required: true,
     lowercase: true,
-    unique: true,
+    unique: true
   },
-  phone: {
+  contactNo: {
     type: String,
     required: true,
-  },
-  dob: {
-    type: Date,
-  },
-  address: {
-    type: String,
-  },
-  gender: {
-    type: String,
-    enum: ["Male", "Female", "Other"],
-  },
-  nic: {
-    type: String,
-    required: true,
-    unique: true,
     trim: true
   },
-  registeredBy: {
+  position: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  addedBy: {
     type: Schema.Types.ObjectId,
-    ref: "Staff",
+    ref: "User",
     required: true
   },
   status: {
     type: String,
     enum: ["ACTIVE", "INACTIVE"],
     default: "ACTIVE"
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-});
+  }
+}, { timestamps: true });
 
-module.exports = model("Patient", PatientSchema);
+module.exports = model("Staff", StaffSchema);
+
