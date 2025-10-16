@@ -32,5 +32,11 @@ app.use((err, req, res, next) => {
   console.error(err);
   res.status(err.status || 500).json({ error: err.message || "Server error" });
 });
+const appointmentRoutes = require("./routes/appointment/appointmentRoutes");
+const authRoutes = require("./routes/authRoutes");
+
+app.use("/api/appointments", appointmentRoutes);
+app.use("/api/auth", authRoutes);   
+
 
 module.exports = app;
