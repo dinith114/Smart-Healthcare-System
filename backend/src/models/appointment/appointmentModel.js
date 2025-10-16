@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+  const mongoose = require("mongoose");
 
 const appointmentSchema = new mongoose.Schema(
   {
@@ -10,7 +10,7 @@ const appointmentSchema = new mongoose.Schema(
     doctorId: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
-      ref: "Doctor",
+      ref: "User",
     },
     date: {
       type: Date,

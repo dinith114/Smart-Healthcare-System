@@ -6,7 +6,7 @@ const {
   rescheduleAppointment,
   cancelAppointment,
   getAppointments,
-} = require("../../controllers/appointmentSchedule/appointmentController");
+} = require("../../controllers/appointment/appointmentController");
 
 const router = express.Router();
 

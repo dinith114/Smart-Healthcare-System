@@ -1,7 +1,7 @@
 // src/controllers/appointmentController.js
-const Appointment = require("../../models/appointmentSchedule/appointmentModel");
-const { isSlotAvailable } = require("../../utils/appointmentSchedule/slotUtils");
-const { sendNotification } = require("../../services/notificationService");
+const Appointment = require("../../models/appointment/appointmentModel");
+const { isSlotAvailable } = require("../../utils/appointment/slotUtils");
+const { sendNotification } = require("../../services/appointment/notificationService");
 
 // 🟢 Create Appointment
 exports.createAppointment = async (req, res) => {
