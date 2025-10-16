@@ -1,5 +1,5 @@
 // src/utils/slotUtils.js
-const Appointment = require("../../models/appointmentSchedule/appointmentModel");
+const Appointment = require("../../models/appointment/appointmentModel");
 
 // Check if doctor has an existing appointment at this time
 exports.isSlotAvailable = async (doctorId, date) => {

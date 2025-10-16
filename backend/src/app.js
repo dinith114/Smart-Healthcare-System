@@ -10,9 +10,11 @@ if (process.env.NODE_ENV !== "test") app.use(morgan("dev"));
 
 app.get("/api/health", (_req, res) => res.json({ ok: true }));
 
-const appointmentRoutes = require("./routes/appointmentSchedule/appointmentRoutes");
+const appointmentRoutes = require("./routes/appointment/appointmentRoutes");
+const authRoutes = require("./routes/authRoutes");
 
 app.use("/api/appointments", appointmentRoutes);
+app.use("/api/auth", authRoutes);   
 
 
 module.exports = app;
