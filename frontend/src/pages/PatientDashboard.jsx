@@ -3,14 +3,14 @@ import { api } from "../services/api";
 import Calendar from "../components/dashboard/Calendar.jsx";
 import UpcomingAppointments from "../components/dashboard/UpcomingAppointments.jsx";
 import PatientInfoCard from "../components/dashboard/PatientInfoCard.jsx";
+
 import DashboardButtons from "../components/dashboard/DashboardButtons.jsx";
+import { useNavigate, Link } from "react-router-dom";
 
 // Modals
 import MedicalInfoModal from "../components/dashboard/modals/MedicalInfoModal.jsx";
 import VitalStatusModal from "../components/dashboard/modals/VitalStatusModal.jsx";
 import VisitHistoryModal from "../components/dashboard/modals/VisitHistoryModal.jsx";
-import PaymentHistoryModal from "../components/dashboard/modals/PaymentHistoryModal.jsx";
-
 export default function PatientDashboard({ patientId }) {
   const [summary, setSummary] = useState(null);
   const [appointments, setAppointments] = useState([]);
@@ -20,7 +20,9 @@ export default function PatientDashboard({ patientId }) {
   const [showMedical, setShowMedical] = useState(false);
   const [showVitals, setShowVitals] = useState(false);
   const [showVisits, setShowVisits] = useState(false);
-  const [showPayments, setShowPayments] = useState(false);
+  // Remove showPayments, navigation will be used instead
+
+  const navigate = useNavigate();
 
   const load = async () => {
     setLoading(true);
@@ -76,9 +78,9 @@ export default function PatientDashboard({ patientId }) {
             <a className="hover:underline" href="#">
               Appointments
             </a>
-            <a className="hover:underline" href="#">
+            <Link className="hover:underline" to="/payment">
               Payment
-            </a>
+            </Link>
           </nav>
           <button className="px-4 py-1.5 rounded-full bg-[#5b6f59] hover:bg-[#4f614e]">
             Logout
@@ -120,7 +122,7 @@ export default function PatientDashboard({ patientId }) {
               onMedical={() => setShowMedical(true)}
               onVitals={() => setShowVitals(true)}
               onVisits={() => setShowVisits(true)}
-              onPayments={() => setShowPayments(true)}
+              onPayments={() => navigate("/payment")}
             />
           </div>
         </div>
@@ -142,11 +144,8 @@ export default function PatientDashboard({ patientId }) {
         onClose={() => setShowVisits(false)}
         visits={summary?.visits || []}
       />
-      <PaymentHistoryModal
-        open={showPayments}
-        onClose={() => setShowPayments(false)}
-        patientId={patientId}
-      />
+      {/* PaymentHistoryModal removed, navigation is used instead */}
+
     </div>
   );
 }
