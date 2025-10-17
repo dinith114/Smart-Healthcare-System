@@ -8,6 +8,8 @@ import {
 } from "../../services/appointment/appointments";
 import { listDoctors } from "../../services/users";
 import { motion } from "framer-motion";
+import PatientNavBar from "../../components/patient/PatientNavBar";
+import Footer from "../../components/patient/Footer";
 
 export default function AppointmentForm() {
   const nav = useNavigate();
@@ -67,33 +69,35 @@ export default function AppointmentForm() {
   const pretty = (iso) => dayjs(iso).format("hh:mm A");
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#8aa082] to-[#7e957a] flex items-center justify-center p-4">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="w-full max-w-3xl"
-      >
-        {/* Header */}
+    <div className="min-h-screen bg-[#8aa082]/30 flex flex-col">
+      <PatientNavBar />
+      
+      <main className="flex-grow max-w-4xl mx-auto px-6 py-6 w-full">
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          className="text-center mb-6"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
         >
+          {/* Header */}
           <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: "spring", stiffness: 260, damping: 20, delay: 0.15 }}
-            className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white/20 mb-3"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="text-center mb-6"
           >
-            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3M3 11h18M5 19h14a2 2 0 002-2v-6H3v6a2 2 0 002 2z" />
-            </svg>
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", stiffness: 260, damping: 20, delay: 0.15 }}
+              className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#7e957a]/20 mb-3"
+            >
+              <svg className="w-8 h-8 text-[#2d3b2b]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3M3 11h18M5 19h14a2 2 0 002-2v-6H3v6a2 2 0 002 2z" />
+              </svg>
+            </motion.div>
+            <h1 className="text-3xl font-bold text-[#2d3b2b]">Book Appointment</h1>
+            <p className="text-gray-600 mt-1">Choose a doctor, pick a date, and select a time slot</p>
           </motion.div>
-          <h1 className="text-3xl font-bold text-white">Make Appointment</h1>
-          <p className="text-white/80 mt-1">Choose a doctor, pick a date, and select a time slot</p>
-        </motion.div>
 
         {/* Card */}
         <motion.div
@@ -239,11 +243,14 @@ export default function AppointmentForm() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.45, delay: 0.3 }}
-          className="text-center text-white/80 text-sm mt-6"
+          className="text-center text-gray-600 text-sm mt-6"
         >
-          <p>You’ll receive a confirmation and a reminder 24 hours before.</p>
+          <p>You'll receive a confirmation and a reminder 24 hours before.</p>
         </motion.div>
-      </motion.div>
+        </motion.div>
+      </main>
+
+      <Footer />
     </div>
   );
 }

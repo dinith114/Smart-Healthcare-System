@@ -13,6 +13,10 @@ import StaffDashboard from "./pages/staff/StaffDashboard";
 import StaffRecordsView from "./pages/staff/StaffRecordsView";
 import PatientPortal from "./pages/patient/PatientPortal";
 import PatientDashboardWrapper from "./pages/patient/PatientDashboardWrapper";
+import AboutPage from "./pages/patient/AboutPage";
+import ContactsPage from "./pages/patient/ContactsPage";
+import QRVerification from "./pages/QRVerification";
+import HealthCardView from "./pages/HealthCardView";
 // import AccessDenied from "./pages/AccessDenied.jsx";
 
 // pages appointment
@@ -31,40 +35,12 @@ export default function App() {
         <ToastProvider>
           <AuthProvider>
             <Routes>
-          {/* Public Routes */}
-          <Route path="/login" element={<Login />} />
-          
-          {/* Admin Routes */}
-          <Route 
-            path="/admin/*" 
-            element={
-              <ProtectedRoute allowedRoles={["admin"]}>
-                <AdminDashboard />
-              </ProtectedRoute>
-            } 
-          />
-          
-          {/* Staff Routes */}
-          <Route 
-            path="/staff/*" 
-            element={
-              <ProtectedRoute allowedRoles={["staff"]}>
-                <StaffDashboard />
-              </ProtectedRoute>
-            } 
-          />
-          
-          {/* Patient Routes */}
-          <Route 
-            path="/patient/*" 
-            element={
-              <ProtectedRoute allowedRoles={["patient"]}>
-                <PatientPortal />
-              </ProtectedRoute>
-            } 
-          />
               {/* Public Routes */}
               <Route path="/login" element={<Login />} />
+              
+              {/* QR Verification Routes (Public) */}
+              <Route path="/verify-health-card/:token" element={<QRVerification />} />
+              <Route path="/view-health-card" element={<HealthCardView />} />
 
               {/* Admin Routes */}
               <Route
@@ -78,7 +54,7 @@ export default function App() {
 
               {/* Staff Routes */}
               <Route
-                path="/staff"
+                path="/staff/*"
                 element={
                   <ProtectedRoute allowedRoles={["staff"]}>
                     <StaffDashboard />
@@ -104,10 +80,10 @@ export default function App() {
 
               {/* Patient Routes */}
               <Route
-                path="/patient"
+                path="/patient/*"
                 element={
                   <ProtectedRoute allowedRoles={["patient"]}>
-                    <PatientPortal />
+                    <PatientPortal key="patient-portal" />
                   </ProtectedRoute>
                 }
               />
@@ -115,25 +91,35 @@ export default function App() {
                 path="/patient/dashboard"
                 element={
                   <ProtectedRoute allowedRoles={["patient"]}>
-                    <PatientDashboardWrapper />
+                    <PatientDashboardWrapper key="patient-dashboard" />
                   </ProtectedRoute>
                 }
               />
-               {/* Appointment Routes */}
-            <Route path="/appointments" element={<AppointmentsPage />} />
-            <Route path="/appointments/new" element={<AppointmentForm />} />
-            <Route path="/appointments/:id" element={<AppointmentDetails />} />
-            <Route path="/appointments/confirm" element={<ConfirmAppointment />} />
-          
-          {/* Payment Routes */}
-            <Route path="/payment" element={<PaymentPage />} />
-          
-          {/* Default redirect to login */}
-          <Route path="/" element={<Navigate to="/login" replace />} />
-          <Route path="*" element={<Navigate to="/login" replace />} />
-        </Routes>
-      </AuthProvider>
-      </ToastProvider>
+              <Route
+                path="/patient/about"
+                element={
+                  <ProtectedRoute allowedRoles={["patient"]}>
+                    <AboutPage key="about-page" />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/patient/contacts"
+                element={
+                  <ProtectedRoute allowedRoles={["patient"]}>
+                    <ContactsPage key="contacts-page" />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Appointment Routes */}
+              <Route path="/appointments" element={<AppointmentsPage key="appointments-list" />} />
+              <Route path="/appointments/new" element={<AppointmentForm key="appointments-new" />} />
+              <Route path="/appointments/:id" element={<AppointmentDetails key="appointments-details" />} />
+              <Route path="/appointments/confirm" element={<ConfirmAppointment key="appointments-confirm" />} />
+
+              {/* Payment Routes */}
+              <Route path="/payment" element={<PaymentPage />} />
 
               {/* Medical Records Demo Route (backward compatibility) */}
               <Route

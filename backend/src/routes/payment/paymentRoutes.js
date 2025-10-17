@@ -1,6 +1,10 @@
 const express = require("express");
 const router = express.Router();
 const { makePayment, getSavedCards, decryptCard, deleteSavedCard } = require("../../controllers/payment/paymentController");
+const { getPaymentHistory } = require("../../controllers/payment/paymentHistoryController");
+
+// Get payment history for a patient
+router.get("/history", getPaymentHistory);
 
 // Get all saved cards
 router.get("/saved-cards", getSavedCards);

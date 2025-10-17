@@ -5,18 +5,33 @@ import { api } from "../../../services/api";
 
 export default function PaymentHistoryModal({ open, onClose, patientId }) {
   const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(false);
+
   useEffect(() => {
-    if (!open) return;
-    api
-      .get(`/payments?patientId=${patientId}`)
-      .then((r) => setItems(r.data || []))
-      .catch(() => setItems([]));
+    if (!open || !patientId) return;
+
+    const fetchPayments = async () => {
+      setLoading(true);
+      try {
+        const response = await api.get(`/payments/history?patientId=${patientId}`);
+        setItems(response.data || []);
+      } catch (error) {
+        console.error("Error fetching payment history:", error);
+        setItems([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPayments();
   }, [open, patientId]);
 
   return (
     <Modal open={open} onClose={onClose} title="Payment History" width={720}>
-      {items.length === 0 ? (
-        <div className="text-sm text-slate-600">No payments recorded.</div>
+      {loading ? (
+        <div className="text-sm text-slate-600 text-center py-8">Loading payment history...</div>
+      ) : items.length === 0 ? (
+        <div className="text-sm text-slate-600 text-center py-8">No payments recorded.</div>
       ) : (
         <table className="w-full text-sm">
           <thead>
