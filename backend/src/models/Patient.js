@@ -1,6 +1,12 @@
 const { Schema, model } = require("mongoose");
 
 const PatientSchema = new Schema({
+  userId: {
+    type: Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+    unique: true
+  },
   name: {
     type: String,
     required: true,
@@ -25,6 +31,22 @@ const PatientSchema = new Schema({
   gender: {
     type: String,
     enum: ["Male", "Female", "Other"],
+  },
+  nic: {
+    type: String,
+    required: true,
+    unique: true,
+    trim: true
+  },
+  registeredBy: {
+    type: Schema.Types.ObjectId,
+    ref: "Staff",
+    required: true
+  },
+  status: {
+    type: String,
+    enum: ["ACTIVE", "INACTIVE"],
+    default: "ACTIVE"
   },
   createdAt: {
     type: Date,
