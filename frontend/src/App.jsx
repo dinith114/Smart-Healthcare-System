@@ -31,38 +31,6 @@ export default function App() {
         <ToastProvider>
           <AuthProvider>
             <Routes>
-          {/* Public Routes */}
-          <Route path="/login" element={<Login />} />
-          
-          {/* Admin Routes */}
-          <Route 
-            path="/admin/*" 
-            element={
-              <ProtectedRoute allowedRoles={["admin"]}>
-                <AdminDashboard />
-              </ProtectedRoute>
-            } 
-          />
-          
-          {/* Staff Routes */}
-          <Route 
-            path="/staff/*" 
-            element={
-              <ProtectedRoute allowedRoles={["staff"]}>
-                <StaffDashboard />
-              </ProtectedRoute>
-            } 
-          />
-          
-          {/* Patient Routes */}
-          <Route 
-            path="/patient/*" 
-            element={
-              <ProtectedRoute allowedRoles={["patient"]}>
-                <PatientPortal />
-              </ProtectedRoute>
-            } 
-          />
               {/* Public Routes */}
               <Route path="/login" element={<Login />} />
 
@@ -78,7 +46,7 @@ export default function App() {
 
               {/* Staff Routes */}
               <Route
-                path="/staff"
+                path="/staff/*"
                 element={
                   <ProtectedRoute allowedRoles={["staff"]}>
                     <StaffDashboard />
@@ -104,7 +72,7 @@ export default function App() {
 
               {/* Patient Routes */}
               <Route
-                path="/patient"
+                path="/patient/*"
                 element={
                   <ProtectedRoute allowedRoles={["patient"]}>
                     <PatientPortal />
@@ -119,27 +87,18 @@ export default function App() {
                   </ProtectedRoute>
                 }
               />
-               {/* Appointment Routes */}
-            <Route path="/appointments" element={<AppointmentsPage />} />
-            <Route path="/appointments/new" element={<AppointmentForm />} />
-            <Route path="/appointments/:id" element={<AppointmentDetails />} />
-            <Route path="/appointments/confirm" element={<ConfirmAppointment />} />
-          
-          {/* Payment Routes */}
-            <Route path="/payment" element={<PaymentPage />} />
-          
-          {/* Default redirect to login */}
-          <Route path="/" element={<Navigate to="/login" replace />} />
-          <Route path="*" element={<Navigate to="/login" replace />} />
-        </Routes>
-      </AuthProvider>
-      </ToastProvider>
+
+              {/* Appointment Routes (public) */}
+              <Route path="/appointments" element={<AppointmentsPage />} />
+              <Route path="/appointments/new" element={<AppointmentForm />} />
+              <Route path="/appointments/:id" element={<AppointmentDetails />} />
+              <Route path="/appointments/confirm" element={<ConfirmAppointment />} />
+
+              {/* Payment Route (public from confirm) */}
+              <Route path="/payment" element={<PaymentPage />} />
 
               {/* Medical Records Demo Route (backward compatibility) */}
-              <Route
-                path="/records"
-                element={<Records patientId={DEMO_PATIENT_ID} role={ROLE} />}
-              />
+              <Route path="/records" element={<Records patientId={DEMO_PATIENT_ID} role={ROLE} />} />
 
               {/* Default redirect to login */}
               <Route path="/" element={<Navigate to="/login" replace />} />
