@@ -31,6 +31,38 @@ export default function App() {
         <ToastProvider>
           <AuthProvider>
             <Routes>
+          {/* Public Routes */}
+          <Route path="/login" element={<Login />} />
+          
+          {/* Admin Routes */}
+          <Route 
+            path="/admin/*" 
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <AdminDashboard />
+              </ProtectedRoute>
+            } 
+          />
+          
+          {/* Staff Routes */}
+          <Route 
+            path="/staff/*" 
+            element={
+              <ProtectedRoute allowedRoles={["staff"]}>
+                <StaffDashboard />
+              </ProtectedRoute>
+            } 
+          />
+          
+          {/* Patient Routes */}
+          <Route 
+            path="/patient/*" 
+            element={
+              <ProtectedRoute allowedRoles={["patient"]}>
+                <PatientPortal />
+              </ProtectedRoute>
+            } 
+          />
               {/* Public Routes */}
               <Route path="/login" element={<Login />} />
 
@@ -92,6 +124,16 @@ export default function App() {
             <Route path="/appointments/new" element={<AppointmentForm />} />
             <Route path="/appointments/:id" element={<AppointmentDetails />} />
             <Route path="/appointments/confirm" element={<ConfirmAppointment />} />
+          
+          {/* Payment Routes */}
+            <Route path="/payment" element={<PaymentPage />} />
+          
+          {/* Default redirect to login */}
+          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="*" element={<Navigate to="/login" replace />} />
+        </Routes>
+      </AuthProvider>
+      </ToastProvider>
 
               {/* Medical Records Demo Route (backward compatibility) */}
               <Route

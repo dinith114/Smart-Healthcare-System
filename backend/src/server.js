@@ -5,9 +5,9 @@ const app = require("./app");
 const { PORT = 5000, MONGO_URI } = process.env;
 
 mongoose
-  .connect(MONGO_URI, { dbName: "smart-healthcare" })
+  .connect(MONGO_URI)
   .then(() => {
-    console.log("✅ MongoDB connected");
+    console.log("✅ MongoDB connected to database:", mongoose.connection.name);
     app.listen(PORT, () => console.log(`🚀 API on http://localhost:${PORT}`));
   })
   .catch((err) => {

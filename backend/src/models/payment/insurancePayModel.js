@@ -8,7 +8,13 @@ const insurancePaymentSchema = new mongoose.Schema({
   amount: { type: Number, required: false },
   status: { type: String, enum: ["Success", "Failed", "Pending"], default: "Pending" },
   transactionId: { type: String, unique: true },
-  details: Object,
+  details: {
+    appointmentInfo: {
+      appointmentId: { type: String, default: "" },
+      amount: { type: Number, default: 0 },
+      currency: { type: String, default: "LKR" },
+    },
+  },
   createdAt: { type: Date, default: Date.now },
 });
 
