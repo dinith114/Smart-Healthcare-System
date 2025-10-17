@@ -1,15 +1,11 @@
 import axios from "axios";
 
-<<<<<<< Updated upstream
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
-=======
->>>>>>> Stashed changes
 export const api = axios.create({
-  baseURL: "http://localhost:5000/api", // your backend
+  baseURL: API_URL,
 });
 
-<<<<<<< Updated upstream
 // Attach JWT token from localStorage if available
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
@@ -23,18 +19,13 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Only redirect on 401/403 if it's NOT a login attempt
-    // (login failures should be handled by the login page)
-    const isLoginEndpoint = error.config?.url?.includes('/auth/login');
-    
+    // Only redirect on 401 if it's NOT a login attempt
+    const isLoginEndpoint = error.config?.url?.includes("/auth/login");
     if (error.response?.status === 401 && !isLoginEndpoint) {
-      // Token expired or invalid - redirect to login
       localStorage.removeItem("token");
       localStorage.removeItem("user");
       window.location.href = "/login";
     }
-    
-    // Note: 403 from login (deactivated account) should also be handled by login page
     return Promise.reject(error);
   }
 );
@@ -62,10 +53,3 @@ export function getDemoHeaders() {
     "x-provider-consent": DEMO.providerConsent,
   };
 }
-=======
-api.interceptors.request.use((config) => {
-  const t = localStorage.getItem("token");
-  if (t) config.headers.Authorization = `Bearer ${t}`;
-  return config;
-});
->>>>>>> Stashed changes

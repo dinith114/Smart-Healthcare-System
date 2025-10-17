@@ -16,6 +16,7 @@ import PatientPortal from "./pages/patient/PatientPortal";
 import AppointmentForm from "./pages/appointment/AppointmentForm";
 import AppointmentDetails from "./pages/appointment/AppointmentDetails";
 import AppointmentsPage from "./pages/appointment/AppointmentsPage";
+import ConfirmAppointment from "./pages/appointment/ConfirmAppointment"; 
 
 const DEMO_PATIENT_ID = "000000000000000000000001";
 const ROLE = "Provider";
@@ -71,6 +72,7 @@ export default function App() {
             <Route path="/appointments" element={<AppointmentsPage />} />
             <Route path="/appointments/new" element={<AppointmentForm />} />
             <Route path="/appointments/:id" element={<AppointmentDetails />} />
+            <Route path="/appointments/confirm" element={<ConfirmAppointment />} />
           
           {/* Default redirect to login */}
           <Route path="/" element={<Navigate to="/login" replace />} />

@@ -1,7 +1,9 @@
+// src / backend / appointment / appointmentController.js
+
 const Appointment = require("../../models/appointment/appointmentModel");
 const { isSlotAvailable, normalizeToSlot } = require("../../utils/appointment/slotUtils");
 const { sendNotification, queueReminder24h } = require("../../services/appointment/notificationService");
-const AuditLog = require("../../models/auditLogModel");
+const AuditLog = require("../../models/AuditLog");
 
 // Create
 exports.createAppointment = async (req, res) => {
