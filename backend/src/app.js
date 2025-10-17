@@ -4,6 +4,7 @@ const express = require("express");
 const cors = require("cors");
 const morgan = require("morgan");
 const path = require("path");
+const mongoose = require("mongoose");
 
 // route modules
 const authRouter = require("./routes/authRoutes");
@@ -30,6 +31,9 @@ const adminRoutes = require("./routes/adminRoutes");
 const staffRoutes = require("./routes/staffRoutes");
 const patientRoutes = require("./routes/patientRoutes");
 const healthCardRoutes = require("./routes/healthCardRoutes");
+const billingRoutes = require("./routes/appointment/billingRoutes");
+const availabilityRoutes = require("./routes/appointment/availabilityRoutes");
+const userRoutes = require("./routes/userRoutes");
 
 // Health check
 app.get("/api/health", (_req, res) => res.json({ ok: true }));
@@ -47,6 +51,9 @@ app.use("/api/patients", patientsRouter);
 app.use("/api/detailed-records", detailedRecordsRouter);
 app.use("/api/appointments", appointmentRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/appointments/availability", availabilityRoutes);
+app.use("/api/billing", billingRoutes);
+app.use("/api/users", userRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/staff", staffRoutes);
 app.use("/api/patient", patientRoutes);

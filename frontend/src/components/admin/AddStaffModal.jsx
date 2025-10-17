@@ -1,6 +1,29 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { api } from "../../services/api";
 import Modal from "../common/Modal";
+
+const SPECIALTIES = [
+  "General",
+  "Family Medicine",
+  "Pediatrics",
+  "Dermatology",
+  "Psychiatry",
+  "Orthopedics",
+  "Radiology",
+  "Cardiology",
+  "Neurology",
+  "OB/GYN",
+  "ENT",
+  "Oncology",
+  "Gastroenterology",
+  "Endocrinology",
+  "Nephrology",
+  "Urology",
+  "Pulmonology",
+  "Rheumatology",
+  "Ophthalmology",
+  "Dental",
+];
 
 export default function AddStaffModal({ open, onClose, onSuccess, staff }) {
   const [formData, setFormData] = useState({
@@ -8,7 +31,8 @@ export default function AddStaffModal({ open, onClose, onSuccess, staff }) {
     email: "",
     contactNo: "",
     position: "",
-    username: ""
+    username: "",
+    speciality: "",
   });
   const [positions, setPositions] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -28,7 +52,8 @@ export default function AddStaffModal({ open, onClose, onSuccess, staff }) {
         email: staff.email || "",
         contactNo: staff.contactNo || "",
         position: staff.position || "",
-        username: staff.username || ""
+        username: staff.username || "",
+        specialty: staff.specialty || staff?.user?.specialty || "", // try both sources
       });
     } else {
       setFormData({
@@ -36,7 +61,8 @@ export default function AddStaffModal({ open, onClose, onSuccess, staff }) {
         email: "",
         contactNo: "",
         position: "",
-        username: ""
+        username: "",
+        specialty: ""
       });
     }
     setError("");
@@ -44,6 +70,11 @@ export default function AddStaffModal({ open, onClose, onSuccess, staff }) {
     setShowAddPosition(false);
     setNewPositionTitle("");
   }, [staff, open]);
+
+  const isDoctor = useMemo(
+    () => (formData.position || "").trim().toLowerCase() === "doctor",
+    [formData.position]
+  );
 
   const loadPositions = async () => {
     try {
@@ -69,9 +100,20 @@ export default function AddStaffModal({ open, onClose, onSuccess, staff }) {
   };
 
   const handleChange = (e) => {
+    const { name, value } = e.target;
+    // if the user changes position away from Doctor, clear specialty
+    if (name === "position") {
+      setFormData((prev) => ({
+        ...prev,
+        position: value,
+        specialty:
+          value.trim().toLowerCase() === "doctor" ? prev.specialty : "",
+      }));
+      return;
+    }
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [name]: value,
     });
   };
 
@@ -81,13 +123,25 @@ export default function AddStaffModal({ open, onClose, onSuccess, staff }) {
     setLoading(true);
 
     try {
+      // Build payload. Include specialty only if Doctor.
+      const payload = {
+        fullName: formData.fullName,
+        email: formData.email,
+        contactNo: formData.contactNo,
+        position: formData.position,
+        username: formData.username,
+        ...(isDoctor && formData.specialty
+          ? { specialty: formData.specialty }
+          : {}),
+      };
+
       if (staff) {
         // Update existing staff
-        await api.put(`/admin/staff/${staff.id}`, formData);
+        await api.put(`/admin/staff/${staff.id}`, payload);
         onSuccess();
       } else {
         // Add new staff
-        const response = await api.post("/admin/staff", formData);
+        const response = await api.post("/admin/staff", payload);
         setTempPassword(response.data.staff.temporaryPassword);
         // Don't close modal immediately, show password first
       }
@@ -253,6 +307,28 @@ export default function AddStaffModal({ open, onClose, onSuccess, staff }) {
                 </div>
               )}
             </div>
+
+            {isDoctor && (
+              <div>
+                <label className="block text-sm font-medium text-[#2d3b2b] mb-1">
+                  Specialization *
+                </label>
+                <select
+                  name="specialty"
+                  value={formData.specialty}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-2 border border-[#b9c8b4] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7e957a]"
+                >
+                  <option value="">Select specialization</option>
+                  {SPECIALTIES.map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             {!staff && (
               <div>

@@ -1,5 +1,5 @@
-// src/routes/appointmentRoutes.js
 const express = require("express");
+const { authenticate } = require("../../middleware/authMiddleware");
 
 const {
   createAppointment,
@@ -10,7 +10,9 @@ const {
 
 const router = express.Router();
 
-// Base URL: /api/appointments
+// ✅ require login for all appointment routes
+router.use(authenticate);
+
 router.post("/create-appointment", createAppointment);
 router.put("/:id/reschedule", rescheduleAppointment);
 router.put("/:id/cancel", cancelAppointment);

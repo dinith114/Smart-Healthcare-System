@@ -28,6 +28,10 @@ const StaffSchema = new Schema({
     required: true,
     trim: true
   },
+   specialty: { 
+    type: String, 
+    trim: true 
+  },
   addedBy: {
     type: Schema.Types.ObjectId,
     ref: "User",

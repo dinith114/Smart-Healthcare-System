@@ -8,7 +8,6 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 export const api = axios.create({
   baseURL: API_URL,
-  timeout: 10000,
 });
 
 // Attach JWT token from localStorage if available
@@ -24,18 +23,13 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Only redirect on 401/403 if it's NOT a login attempt
-    // (login failures should be handled by the login page)
-    const isLoginEndpoint = error.config?.url?.includes('/auth/login');
-    
+    // Only redirect on 401 if it's NOT a login attempt
+    const isLoginEndpoint = error.config?.url?.includes("/auth/login");
     if (error.response?.status === 401 && !isLoginEndpoint) {
-      // Token expired or invalid - redirect to login
       localStorage.removeItem("token");
       localStorage.removeItem("user");
       window.location.href = "/login";
     }
-    
-    // Note: 403 from login (deactivated account) should also be handled by login page
     return Promise.reject(error);
   }
 );
