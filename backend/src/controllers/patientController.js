@@ -27,12 +27,15 @@ exports.getProfile = async (req, res) => {
       gender: patient.gender,
       address: patient.address,
       status: patient.status,
+      avatarUrl: patient.avatarUrl,
       username: patient.userId?.username,
       registeredDate: patient.createdAt,
-      registeredBy: patient.registeredBy ? {
-        name: patient.registeredBy.fullName,
-        position: patient.registeredBy.position
-      } : null
+      registeredBy: patient.registeredBy
+        ? {
+            name: patient.registeredBy.fullName,
+            position: patient.registeredBy.position,
+          }
+        : null,
     });
   } catch (error) {
     console.error("Get profile error:", error);
@@ -64,7 +67,7 @@ exports.getHealthCard = async (req, res) => {
       issuedDate: healthCard.issuedDate,
       status: healthCard.status,
       qrCodeImage: healthCard.qrCodeImage,
-      lastScanned: healthCard.lastScanned
+      lastScanned: healthCard.lastScanned,
     });
   } catch (error) {
     console.error("Get health card error:", error);
@@ -87,7 +90,10 @@ exports.updateProfile = async (req, res) => {
 
     // Update allowed fields
     if (email && email !== patient.email) {
-      const existing = await Patient.findOne({ email, _id: { $ne: patient._id } });
+      const existing = await Patient.findOne({
+        email,
+        _id: { $ne: patient._id },
+      });
       if (existing) {
         return res.status(400).json({ message: "Email already in use" });
       }
@@ -115,12 +121,11 @@ exports.updateProfile = async (req, res) => {
         id: patient._id,
         name: patient.name,
         email: patient.email,
-        address: patient.address
-      }
+        address: patient.address,
+      },
     });
   } catch (error) {
     console.error("Update profile error:", error);
     res.status(500).json({ message: "Failed to update profile" });
   }
 };
-

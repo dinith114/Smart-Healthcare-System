@@ -4,6 +4,7 @@ import { toDateInputValue, formatDisplayDate } from "../../utils/date";
 export default function LabResultsCard({
   items = [],
   editable = false,
+  addOnly = false,
   onChange,
 }) {
   const add = () => onChange?.([...(items || []), ""]);
@@ -36,25 +37,35 @@ export default function LabResultsCard({
         <div className="space-y-2">
           {items.map((d, i) => (
             <div key={i} className="flex gap-2 items-center">
-              <input
-                type="date"
-                className="flex-1 rounded-lg border border-[#b9c8b4] bg-white px-2 py-1"
-                value={toDateInputValue(d)}
-                onChange={(e) => set(i, e.target.value)}
-              />
-              <button
-                onClick={() => remove(i)}
-                className="px-2 rounded border border-[#b9c8b4]"
-              >
-                –
-              </button>
+              {addOnly ? (
+                // Read-only display for existing items in addOnly mode
+                <div className="flex-1 px-3 py-2 rounded-lg bg-[#dfead9] text-sm">
+                  {formatDisplayDate(d)}
+                </div>
+              ) : (
+                // Fully editable in edit mode
+                <>
+                  <input
+                    type="date"
+                    className="flex-1 rounded-lg border border-[#b9c8b4] bg-white px-2 py-1"
+                    value={toDateInputValue(d)}
+                    onChange={(e) => set(i, e.target.value)}
+                  />
+                  <button
+                    onClick={() => remove(i)}
+                    className="px-2 rounded border border-[#b9c8b4]"
+                  >
+                    –
+                  </button>
+                </>
+              )}
             </div>
           ))}
           <button
             onClick={add}
             className="px-2 py-1 rounded border border-[#b9c8b4] bg-white"
           >
-            + Add
+            + Add New
           </button>
         </div>
       )}

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api } from "../../services/api";
+import { api, getDemoHeaders } from "../../services/api";
 import LoadingSkeleton from "../common/LoadingSkeleton";
 import ErrorBanner from "../common/ErrorBanner";
 import EmptyState from "../common/EmptyState";
@@ -15,14 +15,17 @@ export default function AuditTimeline({ patientId, open, onClose }) {
     if (!open) return;
     setLoading(true);
     setErr("");
+    const demoHeaders = getDemoHeaders();
     api
-      .get(`/audit/${patientId}`)
+      .get(`/audit/${patientId}`, { headers: demoHeaders })
       .then((r) => {
         setData(r.data || []);
         setLoading(false);
       })
       .catch((e) => {
-        setErr(e.message);
+        setErr(
+          e.response?.data?.error || e.response?.data?.message || e.message
+        );
         setLoading(false);
       });
   }, [open, patientId]);
