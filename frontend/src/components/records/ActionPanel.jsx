@@ -6,6 +6,7 @@ export default function ActionPanel({
   onSave,
   onCancel,
   onAdd,
+  onViewOldRecords,
 }) {
   return (
     <div className="rounded-2xl border border-[#b9c8b4] bg-[#f0f5ef] p-3">
@@ -33,7 +34,13 @@ export default function ActionPanel({
                 onClick={onAdd}
                 className="w-full rounded-lg bg-[#8da689] text-white/95 py-2 hover:bg-[#7c9578]"
               >
-                Add Note
+                Add Report
+              </button>
+              <button
+                onClick={onViewOldRecords}
+                className="w-full mt-2 rounded-lg bg-[#9db598] text-white/95 py-2 hover:bg-[#8da689]"
+              >
+                View Old Records
               </button>
               <button
                 disabled

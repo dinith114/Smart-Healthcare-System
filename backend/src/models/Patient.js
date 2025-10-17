@@ -5,7 +5,7 @@ const PatientSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: "User",
     required: true,
-    unique: true
+    unique: true,
   },
   name: {
     type: String,
@@ -36,17 +36,21 @@ const PatientSchema = new Schema({
     type: String,
     required: true,
     unique: true,
-    trim: true
+    trim: true,
   },
   registeredBy: {
     type: Schema.Types.ObjectId,
     ref: "Staff",
-    required: true
+    required: true,
   },
   status: {
     type: String,
     enum: ["ACTIVE", "INACTIVE"],
-    default: "ACTIVE"
+    default: "ACTIVE",
+  },
+  avatarUrl: {
+    type: String,
+    default: null,
   },
   createdAt: {
     type: Date,

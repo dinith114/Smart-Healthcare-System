@@ -13,34 +13,32 @@ const { sendPatientCredentials } = require("../services/emailService");
  */
 exports.registerPatient = async (req, res) => {
   try {
-    const {
-      name,
-      email,
-      phone,
-      dob,
-      address,
-      gender,
-      nic
-    } = req.body;
+    const { name, email, phone, dob, address, gender, nic } = req.body;
 
     const staffUserId = req.user.id;
 
     // Validation
     if (!name || !email || !phone || !nic || !dob || !gender) {
-      return res.status(400).json({ message: "All required fields must be filled" });
+      return res
+        .status(400)
+        .json({ message: "All required fields must be filled" });
     }
 
     // Validate NIC format
     if (!validateNIC(nic)) {
       return res.status(400).json({
-        message: "Invalid NIC format. Use format: 123456789V or 200012345678"
+        message: "Invalid NIC format. Use format: 123456789V or 200012345678",
       });
     }
 
     // Check if NIC already exists
-    const existingNIC = await Patient.findOne({ nic: nic.trim().toUpperCase() });
+    const existingNIC = await Patient.findOne({
+      nic: nic.trim().toUpperCase(),
+    });
     if (existingNIC) {
-      return res.status(400).json({ message: "Patient with this NIC already exists" });
+      return res
+        .status(400)
+        .json({ message: "Patient with this NIC already exists" });
     }
 
     // Check if email already exists
@@ -52,7 +50,9 @@ exports.registerPatient = async (req, res) => {
     // Check if phone already exists as username
     const existingUser = await User.findOne({ username: phone });
     if (existingUser) {
-      return res.status(400).json({ message: "Phone number already registered" });
+      return res
+        .status(400)
+        .json({ message: "Phone number already registered" });
     }
 
     // Get staff record to link
@@ -67,7 +67,7 @@ exports.registerPatient = async (req, res) => {
     // Create user account (username = phone number)
     const user = new User({
       username: phone,
-      role: "patient"
+      role: "patient",
     });
     await user.setPassword(password);
     await user.save();
@@ -82,7 +82,7 @@ exports.registerPatient = async (req, res) => {
       address,
       gender,
       nic: nic.trim().toUpperCase(),
-      registeredBy: staff._id
+      registeredBy: staff._id,
     });
     await patient.save();
 
@@ -91,14 +91,14 @@ exports.registerPatient = async (req, res) => {
     const { qrCodeData, qrCodeImage } = await generateQRCode({
       patientId: patient._id.toString(),
       cardNumber,
-      issuedDate: new Date()
+      issuedDate: new Date(),
     });
 
     const healthCard = new HealthCard({
       cardNumber,
       patientId: patient._id,
       qrCodeData,
-      qrCodeImage
+      qrCodeImage,
     });
     await healthCard.save();
 
@@ -108,7 +108,7 @@ exports.registerPatient = async (req, res) => {
       patientName: name,
       username: phone,
       password,
-      cardNumber
+      cardNumber,
     });
 
     res.status(201).json({
@@ -118,16 +118,16 @@ exports.registerPatient = async (req, res) => {
         name: patient.name,
         email: patient.email,
         phone: patient.phone,
-        nic: patient.nic
+        nic: patient.nic,
       },
       credentials: {
         username: phone,
-        password
+        password,
       },
       healthCard: {
         cardNumber,
-        qrCodeImage
-      }
+        qrCodeImage,
+      },
     });
   } catch (error) {
     console.error("Register patient error:", error);
@@ -158,8 +158,8 @@ exports.getPatients = async (req, res) => {
           { name: { $regex: search, $options: "i" } },
           { email: { $regex: search, $options: "i" } },
           { phone: { $regex: search, $options: "i" } },
-          { nic: { $regex: search, $options: "i" } }
-        ]
+          { nic: { $regex: search, $options: "i" } },
+        ],
       };
     }
 
@@ -171,7 +171,7 @@ exports.getPatients = async (req, res) => {
     const total = await Patient.countDocuments({ ...query });
 
     res.json({
-      patients: patients.map(p => ({
+      patients: patients.map((p) => ({
         id: p._id,
         name: p.name,
         email: p.email,
@@ -181,14 +181,14 @@ exports.getPatients = async (req, res) => {
         gender: p.gender,
         address: p.address,
         status: p.status,
-        createdAt: p.createdAt
+        createdAt: p.createdAt,
       })),
       pagination: {
         total,
         page: parseInt(page),
         limit: parseInt(limit),
-        pages: Math.ceil(total / limit)
-      }
+        pages: Math.ceil(total / limit),
+      },
     });
   } catch (error) {
     console.error("Get patients error:", error);
@@ -224,14 +224,17 @@ exports.getPatientDetails = async (req, res) => {
         gender: patient.gender,
         address: patient.address,
         status: patient.status,
+        avatarUrl: patient.avatarUrl,
         registeredBy: patient.registeredBy?.fullName,
-        createdAt: patient.createdAt
+        createdAt: patient.createdAt,
       },
-      healthCard: healthCard ? {
-        cardNumber: healthCard.cardNumber,
-        issuedDate: healthCard.issuedDate,
-        status: healthCard.status
-      } : null
+      healthCard: healthCard
+        ? {
+            cardNumber: healthCard.cardNumber,
+            issuedDate: healthCard.issuedDate,
+            status: healthCard.status,
+          }
+        : null,
     });
   } catch (error) {
     console.error("Get patient details error:", error);
@@ -255,10 +258,13 @@ exports.updatePatient = async (req, res) => {
     // Update allowed fields
     if (name) patient.name = name;
     if (address) patient.address = address;
-    
+
     // Check email uniqueness if changed
     if (email && email !== patient.email) {
-      const existing = await Patient.findOne({ email, _id: { $ne: patientId } });
+      const existing = await Patient.findOne({
+        email,
+        _id: { $ne: patientId },
+      });
       if (existing) {
         return res.status(400).json({ message: "Email already in use" });
       }
@@ -267,12 +273,15 @@ exports.updatePatient = async (req, res) => {
 
     // Check phone uniqueness if changed
     if (phone && phone !== patient.phone) {
-      const existing = await Patient.findOne({ phone, _id: { $ne: patientId } });
+      const existing = await Patient.findOne({
+        phone,
+        _id: { $ne: patientId },
+      });
       if (existing) {
         return res.status(400).json({ message: "Phone number already in use" });
       }
       patient.phone = phone;
-      
+
       // Update username in User model
       await User.findByIdAndUpdate(patient.userId, { username: phone });
     }
@@ -286,12 +295,11 @@ exports.updatePatient = async (req, res) => {
         name: patient.name,
         email: patient.email,
         phone: patient.phone,
-        address: patient.address
-      }
+        address: patient.address,
+      },
     });
   } catch (error) {
     console.error("Update patient error:", error);
     res.status(500).json({ message: "Failed to update patient" });
   }
 };
-

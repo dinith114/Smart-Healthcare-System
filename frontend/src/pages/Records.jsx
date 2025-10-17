@@ -1,15 +1,17 @@
 // src/pages/Records.jsx
 import { useEffect, useMemo, useState } from "react";
-import { api } from "../services/api";
+import { useNavigate } from "react-router-dom";
+import { api, getDemoHeaders } from "../services/api";
 import LoadingSkeleton from "../components/common/LoadingSkeleton.jsx";
 import ErrorBanner from "../components/common/ErrorBanner.jsx";
 import EmptyState from "../components/common/EmptyState.jsx";
-import UpdateRecordModal from "../components/records/UpdateRecordModal.jsx";
+import AddReportModal from "../components/records/AddReportModal.jsx";
+import ViewOldRecordsModal from "../components/records/ViewOldRecordsModal.jsx";
 import AuditTimeline from "../components/records/AuditTimeline.jsx";
 import { formatDateTime } from "../utils/date";
 
 // Cards
-import PatientSummaryCard from "../components/records/PatientSummaryCard.jsx";
+import PatientInfoCard from "../components/dashboard/PatientInfoCard.jsx";
 import ActionPanel from "../components/records/ActionPanel.jsx";
 import MedicationsCard from "../components/records/MedicationsCard.jsx";
 import LabResultsCard from "../components/records/LabResultsCard.jsx";
@@ -18,31 +20,42 @@ import VisitHistoryCard from "../components/records/VisitHistoryCard.jsx";
 import ImmunizationsCard from "../components/records/ImmunizationsCard.jsx";
 
 export default function Records({ patientId, role = "Patient" }) {
+  const navigate = useNavigate();
   const [record, setRecord] = useState(null);
   const [summary, setSummary] = useState(null);
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(true);
-  const [modalOpen, setModalOpen] = useState(false);
+  const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [oldRecordsOpen, setOldRecordsOpen] = useState(false);
   const [auditOpen, setAuditOpen] = useState(false);
 
   // Provider-only inline edit mode (toggled from ActionPanel)
   const [editMode, setEditMode] = useState(false);
   const canEdit = useMemo(() => role === "Provider", [role]);
 
+  const logout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/login");
+  };
+
   // Load records (encounters) + patient summary
   const fetchAll = async () => {
     setLoading(true);
     setErr("");
     try {
+      // Get demo headers for medical records endpoints
+      const demoHeaders = getDemoHeaders();
+
       const [recRes, sumRes] = await Promise.all([
-        api.get(`/records/${patientId}`),
-        api.get(`/patients/${patientId}/summary`),
+        api.get(`/records/${patientId}`, { headers: demoHeaders }),
+        api.get(`/patients/${patientId}/summary`, { headers: demoHeaders }),
       ]);
       setRecord(recRes.data || { encounters: [] });
       setSummary(sumRes.data || null);
       setLoading(false);
     } catch (e) {
-      setErr(e.message);
+      setErr(e.response?.data?.error || e.response?.data?.message || e.message);
       setLoading(false);
     }
   };
@@ -60,6 +73,25 @@ export default function Records({ patientId, role = "Patient" }) {
   // Save summary changes to backend (PATCH)
   const onSaveSummary = async () => {
     try {
+      const demoHeaders = getDemoHeaders();
+
+      // Create a detailed record entry for this update
+      const detailedPayload = {
+        note: "Vital status and lab results updated",
+        vitals: summary?.vitals,
+        labs: summary?.labs,
+        medications: [],
+        visits: [],
+        immunizations: [],
+        providerName: "Provider",
+        providerRole: "Provider",
+      };
+
+      await api.post(`/detailed-records/${patientId}`, detailedPayload, {
+        headers: demoHeaders,
+      });
+
+      // Update the patient summary
       const payload = {
         vitals: summary?.vitals,
         medications: summary?.medications,
@@ -67,11 +99,20 @@ export default function Records({ patientId, role = "Patient" }) {
         visits: summary?.visits,
         immunizations: summary?.immunizations,
       };
-      await api.patch(`/patients/${patientId}/summary`, payload);
+
+      await api.patch(`/patients/${patientId}/summary`, payload, {
+        headers: demoHeaders,
+      });
+
       setEditMode(false);
       alert("Summary updated");
     } catch (e) {
-      alert(e.message || "Failed to save");
+      alert(
+        e.response?.data?.error ||
+          e.response?.data?.message ||
+          e.message ||
+          "Failed to save"
+      );
     }
   };
 
@@ -127,7 +168,10 @@ export default function Records({ patientId, role = "Patient" }) {
                 Read-only
               </span>
             )}
-            <button className="px-4 py-1.5 rounded-full bg-[#5b6f59] hover:bg-[#4f614e]">
+            <button
+              onClick={logout}
+              className="px-4 py-1.5 rounded-full bg-[#5b6f59] hover:bg-[#4f614e]"
+            >
               Logout
             </button>
           </div>
@@ -143,7 +187,17 @@ export default function Records({ patientId, role = "Patient" }) {
         <div className="grid grid-cols-12 gap-5">
           {/* LEFT column — Patient Info, Vitals, Immunizations */}
           <div className="col-span-12 md:col-span-4 space-y-5">
-            <PatientSummaryCard data={summary?.patient} />
+            <PatientInfoCard
+              data={summary?.patient}
+              className="rounded-2xl border border-[#b9c8b4] bg-[#f0f5ef] p-5"
+              patientId={patientId}
+              onAvatarChanged={(url) =>
+                setSummary((s) => ({
+                  ...s,
+                  patient: { ...s?.patient, avatarUrl: url },
+                }))
+              }
+            />
             <VitalsCard
               vitals={summary?.vitals}
               editable={editMode}
@@ -152,7 +206,7 @@ export default function Records({ patientId, role = "Patient" }) {
             {/* moved here to fill the empty space */}
             <ImmunizationsCard
               items={summary?.immunizations || []}
-              editable={editMode}
+              editable={false}
               onChange={(items) =>
                 setSummary((s) => ({ ...s, immunizations: items }))
               }
@@ -170,7 +224,8 @@ export default function Records({ patientId, role = "Patient" }) {
                 setEditMode(false);
                 fetchAll();
               }}
-              onAdd={() => setModalOpen(true)}
+              onAdd={() => setReportModalOpen(true)}
+              onViewOldRecords={() => setOldRecordsOpen(true)}
             />
 
             <div className="rounded-2xl border border-[#b9c8b4] bg-[#f0f5ef] p-4 shadow-sm">
@@ -202,7 +257,7 @@ export default function Records({ patientId, role = "Patient" }) {
           <div className="col-span-12 md:col-span-4 space-y-5">
             <MedicationsCard
               items={summary?.medications || []}
-              editable={editMode}
+              editable={false}
               onChange={(items) =>
                 setSummary((s) => ({ ...s, medications: items }))
               }
@@ -210,11 +265,12 @@ export default function Records({ patientId, role = "Patient" }) {
             <LabResultsCard
               items={summary?.labs || []}
               editable={editMode}
+              addOnly={editMode}
               onChange={(items) => setSummary((s) => ({ ...s, labs: items }))}
             />
             <VisitHistoryCard
               items={summary?.visits || []}
-              editable={editMode}
+              editable={false}
               onChange={(items) => setSummary((s) => ({ ...s, visits: items }))}
             />
           </div>
@@ -222,11 +278,16 @@ export default function Records({ patientId, role = "Patient" }) {
       </main>
 
       {/* Modals / Drawers */}
-      <UpdateRecordModal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
+      <AddReportModal
+        open={reportModalOpen}
+        onClose={() => setReportModalOpen(false)}
         patientId={patientId}
-        onSaved={(updated) => setRecord(updated)}
+        onSaved={() => fetchAll()}
+      />
+      <ViewOldRecordsModal
+        open={oldRecordsOpen}
+        onClose={() => setOldRecordsOpen(false)}
+        patientId={patientId}
       />
       <AuditTimeline
         open={auditOpen}
