@@ -22,15 +22,27 @@ exports.register = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const { username, password } = req.body;
+    console.log('[LOGIN] Attempt for:', JSON.stringify(username), 'pw length:', password?.length);
+    console.log('[LOGIN] Searching with query:', { username });
     const user = await User.findOne({ username });
-    if (!user) return res.status(401).json({ message: "Invalid credentials" });
+    console.log('[LOGIN] Query result:', user ? 'FOUND' : 'NOT FOUND');
+    if (user) {
+      console.log('[LOGIN] User details:', { _id: user._id, username: user.username, role: user.role, status: user.status });
+    }
+    if (!user) {
+      console.log('[LOGIN] User not found');
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+    console.log('[LOGIN] User found:', user.username, 'status:', user.status);
 
     // Check if user account is active
     if (user.status === "INACTIVE") {
+      console.log('[LOGIN] User inactive');
       return res.status(403).json({ message: "Your account has been deactivated. Please contact the administrator." });
     }
 
     const valid = await user.validatePassword(password);
+    console.log('[LOGIN] Password valid:', valid);
     if (!valid) return res.status(401).json({ message: "Invalid credentials" });
 
     // create token payload

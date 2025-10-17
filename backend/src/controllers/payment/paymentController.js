@@ -27,6 +27,8 @@ exports.getSavedCards = async (req, res) => {
 const { validateCard } = require("../../utils/payment/validateCard");
 const Payment = require("../../models/payment/paymentModel");
 const crypto = require("crypto");
+const { sendPaymentReceipt } = require("../../services/emailService");
+const User = require("../../models/userModel");
 
 // Encryption key (in production, use environment variable)
 const ENCRYPTION_KEY = process.env.CARD_ENCRYPTION_KEY || "12345678901234567890123456789012"; // 32 chars
@@ -85,98 +87,66 @@ exports.deleteSavedCard = async (req, res) => {
 
 exports.makePayment = async (req, res) => {
   try {
-    const { card, amount, saveCard } = req.body;
+  const { card, amount, saveCard, patientId, appointmentId, appointmentInfo } = req.body;
 
-    console.log("Payment request received:", { card: { ...card, cardNumber: card?.cardNumber?.slice(-4) }, amount, saveCard });
+  // Validate required fields
+  if (!card || !amount) {
+    return res.status(400).json({
+      success: false,
+      message: "Card details and amount are required",
+    });
+  }
+  if (!validateCard(card)) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid card details. Please check your card information.",
+    });
+  }
+  // Validate expiry date is in the future
+  const now = new Date();
+  const expMonth = parseInt(card.expiryMM, 10);
+  const expYear = parseInt(card.expiryYY, 10) + 2000;
+  const expDate = new Date(expYear, expMonth - 1, 1);
+  expDate.setMonth(expDate.getMonth() + 1);
+  if (isNaN(expMonth) || isNaN(expYear) || expDate <= now) {
+    return res.status(400).json({
+      success: false,
+      message: "Card expiry date must be in the future.",
+    });
+  }
+  if (amount <= 0) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid payment amount",
+    });
+  }
 
-    // Validate required fields
-    if (!card || !amount) {
-      console.log("Validation failed: Missing card or amount");
-      return res.status(400).json({
-        success: false,
-        message: "Card details and amount are required",
-      });
-    }
+  // Simulate payment processing
+  const shouldFail = Math.random() < 0.1;
+  const transactionId = `TXN${Date.now()}${Math.floor(Math.random() * 1000)}`;
 
-    // Validate card details
-    if (!validateCard(card)) {
-      console.log("Validation failed: Invalid card details");
-      return res.status(400).json({
-        success: false,
-        message: "Invalid card details. Please check your card information.",
-      });
-    }
-    // Validate expiry date is in the future
-    const now = new Date();
-    const expMonth = parseInt(card.expiryMM, 10);
-    const expYear = parseInt(card.expiryYY, 10) + 2000;
-    const expDate = new Date(expYear, expMonth - 1, 1);
-    expDate.setMonth(expDate.getMonth() + 1); // End of expiry month
-    if (isNaN(expMonth) || isNaN(expYear) || expDate <= now) {
-      return res.status(400).json({
-        success: false,
-        message: "Card expiry date must be in the future.",
-      });
-    }
+  // Prepare appointment info for DB (only required fields)
+  const appointmentDetails = {
+    appointmentId: appointmentId || appointmentInfo?.appointmentId || "",
+    amount: appointmentInfo?.amount || amount,
+    currency: appointmentInfo?.currency || "LKR",
+  };
 
-    // Validate amount
-    if (amount <= 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid payment amount",
-      });
-    }
-
-    // Simulate payment processing
-    // In a real application, you would integrate with a payment gateway here
-    // (e.g., Stripe, PayPal, etc.)
-
-    // Simulate random payment failure for testing (10% chance)
-    const shouldFail = Math.random() < 0.1;
-    
-    // Generate transaction ID
-    const transactionId = `TXN${Date.now()}${Math.floor(Math.random() * 1000)}`;
-    
-    if (shouldFail) {
-      // Save failed payment to database (store card only if explicitly requested)
-      const failedPaymentData = {
-        amount,
-        method: "Card",
-        status: "Failed",
-        transactionId,
-        details: {
-          reason: "Payment declined by bank",
-        },
-      };
-      if (saveCard) {
-        failedPaymentData.card = {
-          cardOwner: card.cardOwner,
-          last4: card.cardNumber.slice(-4),
-          encryptedNumber: encryptCardNumber(card.cardNumber),
-          expiryMM: card.expiryMM,
-          expiryYY: card.expiryYY,
-        };
-      }
-      const failedPayment = new Payment(failedPaymentData);
-      await failedPayment.save();
-      return res.status(400).json({
-        success: false,
-        message: "Payment declined by bank. Please try again or use a different card.",
-      });
-    }
-
-    // Payment successful - Save to database (store card only if explicitly requested)
-    const paymentData = {
+  if (shouldFail) {
+    const failedPaymentData = {
       amount,
       method: "Card",
-      status: "Success",
+      status: "Failed",
       transactionId,
+      patientId,
+      appointmentId,
       details: {
-        appointmentInfo: "Dr Kusalya Widanagama - X-Ray Scanning",
+        appointmentInfo: appointmentDetails,
+        reason: "Payment declined by bank",
       },
     };
     if (saveCard) {
-      paymentData.card = {
+      failedPaymentData.card = {
         cardOwner: card.cardOwner,
         last4: card.cardNumber.slice(-4),
         encryptedNumber: encryptCardNumber(card.cardNumber),
@@ -184,33 +154,82 @@ exports.makePayment = async (req, res) => {
         expiryYY: card.expiryYY,
       };
     }
-    const payment = new Payment(paymentData);
-    await payment.save();
-    console.log("Payment saved to database:", payment._id);
-
-    // If saveCard is true, you would save the card details to database
-    // (Remember to encrypt sensitive data and follow PCI compliance)
-
-    return res.status(200).json({
-      success: true,
-      message: "Payment successful!",
-      data: {
-        transactionId: payment.transactionId,
-        amount: payment.amount,
-        cardLast4: payment.card ? payment.card.last4 : undefined,
-        timestamp: payment.createdAt,
-        status: payment.status,
-        paymentId: payment._id,
-      },
-    });
-
-  } catch (error) {
-    console.error("Payment error:", error);
-    return res.status(500).json({
+    const failedPayment = new Payment(failedPaymentData);
+    await failedPayment.save();
+    return res.status(400).json({
       success: false,
-      message: "Payment processing failed. Please try again later.",
+      message: "Payment declined by bank. Please try again or use a different card.",
     });
   }
+
+  // Payment successful - Save to database
+  const paymentData = {
+    amount: appointmentDetails.amount,
+    method: "Card",
+    status: "Success",
+    transactionId,
+    patientId,
+    appointmentId,
+    details: {
+      appointmentInfo: appointmentDetails,
+    },
+  };
+  if (saveCard) {
+    paymentData.card = {
+      cardOwner: card.cardOwner,
+      last4: card.cardNumber.slice(-4),
+      encryptedNumber: encryptCardNumber(card.cardNumber),
+      expiryMM: card.expiryMM,
+      expiryYY: card.expiryYY,
+    };
+  }
+  const payment = new Payment(paymentData);
+  await payment.save();
+
+  // Send payment receipt email
+  try {
+    if (patientId) {
+      const patient = await User.findById(patientId);
+      if (patient && patient.email) {
+        await sendPaymentReceipt({
+          to: patient.email,
+          patientName: patient.username || patient.name || "Patient",
+          transactionId: payment.transactionId,
+          amount: payment.amount,
+          currency: appointmentDetails.currency,
+          appointmentId: appointmentDetails.appointmentId,
+          doctorName: appointmentInfo?.doctorName || "N/A",
+          specialty: appointmentInfo?.specialty || appointmentInfo?.type || "N/A",
+          appointmentDate: appointmentInfo?.isoDate || "",
+          paymentMethod: "Card",
+          cardLast4: payment.card ? payment.card.last4 : undefined,
+        });
+      }
+    }
+  } catch (emailError) {
+    console.error("Failed to send payment receipt email:", emailError);
+    // Don't fail the payment if email fails
+  }
+
+  return res.status(200).json({
+    success: true,
+    message: "Payment successful!",
+    data: {
+      transactionId: payment.transactionId,
+      amount: payment.amount,
+      cardLast4: payment.card ? payment.card.last4 : undefined,
+      timestamp: payment.createdAt,
+      status: payment.status,
+      paymentId: payment._id,
+    },
+  });
+  
+} catch (error) {
+  return res.status(500).json({
+    success: false,
+    message: "Payment processing failed. Please try again later.",
+  });
+}
 };
 
 // Decrypt card number endpoint

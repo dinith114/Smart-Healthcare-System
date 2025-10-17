@@ -3,7 +3,7 @@ const { validateInsurancePayment } = require("../../utils/payment/insurancePayUt
 
 exports.makeInsurancePayment = async (req, res) => {
   try {
-    const { policyNumber, provider, insuredName, amount } = req.body;
+  const { policyNumber, provider, insuredName, amount, appointmentId, appointmentInfo } = req.body;
     if (!validateInsurancePayment({ policyNumber, provider, insuredName })) {
       return res.status(400).json({
         success: false,
@@ -12,15 +12,20 @@ exports.makeInsurancePayment = async (req, res) => {
     }
     // Simulate payment processing (always success for demo)
     const transactionId = `INS${Date.now()}${Math.floor(Math.random() * 1000)}`;
+    const appointmentDetails = {
+      appointmentId: appointmentId || appointmentInfo?.appointmentId || "",
+      amount: appointmentInfo?.amount || amount || 0,
+      currency: appointmentInfo?.currency || "LKR",
+    };
     const payment = new InsurancePayment({
       policyNumber,
       provider,
       insuredName,
-      amount: amount || 0,
+      amount: appointmentDetails.amount,
       status: "Success",
       transactionId,
       details: {
-        appointmentInfo: "Dr Kusalya Widanagama - X-Ray Scanning",
+        appointmentInfo: appointmentDetails,
       },
     });
     await payment.save();

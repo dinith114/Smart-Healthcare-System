@@ -15,7 +15,13 @@ const paymentSchema = new mongoose.Schema({
   method: { type: String, enum: ["Card", "Insurance"], default: "Card" },
   status: { type: String, enum: ["Success", "Failed", "Pending"], default: "Pending" },
   transactionId: { type: String, unique: true },
-  details: Object,
+  details: {
+    appointmentInfo: {
+      appointmentId: { type: String, default: "" },
+      amount: { type: Number, default: 0 },
+      currency: { type: String, default: "LKR" },
+    },
+  },
   card: cardSchema,
   createdAt: { type: Date, default: Date.now },
 });

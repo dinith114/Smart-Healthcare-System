@@ -47,7 +47,6 @@ export default function App() {
             element={
               <ProtectedRoute allowedRoles={["staff"]}>
                 <StaffDashboard />
-                <PaymentPage />
               </ProtectedRoute>
             } 
           />
@@ -73,6 +72,9 @@ export default function App() {
             <Route path="/appointments/new" element={<AppointmentForm />} />
             <Route path="/appointments/:id" element={<AppointmentDetails />} />
             <Route path="/appointments/confirm" element={<ConfirmAppointment />} />
+          
+          {/* Payment Routes */}
+            <Route path="/payment" element={<PaymentPage />} />
           
           {/* Default redirect to login */}
           <Route path="/" element={<Navigate to="/login" replace />} />

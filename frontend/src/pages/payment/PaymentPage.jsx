@@ -1,5 +1,7 @@
 
 import React, { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 import Swal from "sweetalert2";
 import axios from "axios";
 import { jsPDF } from "jspdf";
@@ -7,6 +9,12 @@ import { jsPDF } from "jspdf";
 
 
 const PaymentPage = () => {
+  const { state } = useLocation();
+  const { user } = useAuth();
+  // Get appointment/payment info from location state
+  const appointmentInfo = state?.payment || {};
+  const patientId = user?.id || appointmentInfo.patientId;
+  const appointmentId = appointmentInfo.appointmentId;
   // Insurance form state
   const [insurance, setInsurance] = useState({
     policyNumber: "",
@@ -27,7 +35,17 @@ const PaymentPage = () => {
     e.preventDefault();
     setInsuranceLoading(true);
     try {
-      const res = await axios.post("http://localhost:5000/api/insurance-payment/", insurance);
+          const res = await axios.post("http://localhost:5000/api/insurance-payment/", {
+            ...insurance,
+            amount: appointmentInfo.amount || 0,
+            patientId,
+            appointmentId: appointmentInfo.appointmentId || appointmentId,
+            appointmentInfo: {
+              appointmentId: appointmentInfo.appointmentId || appointmentId,
+              amount: appointmentInfo.amount || 0,
+              currency: appointmentInfo.currency || 'LKR',
+            },
+          });
       if (res.data?.success) {
         Swal.fire({
           title: "Insurance Payment Successful",
@@ -220,9 +238,16 @@ const PaymentPage = () => {
     setLoading(true);
     try {
       const res = await axios.post("http://localhost:5000/api/payment/make-payment", {
-        card,
-        amount: 12500,
-        saveCard,
+            card,
+            amount: appointmentInfo.amount || 12500,
+            saveCard,
+            patientId,
+            appointmentId: appointmentInfo.appointmentId || appointmentId,
+            appointmentInfo: {
+              appointmentId: appointmentInfo.appointmentId || appointmentId,
+              amount: appointmentInfo.amount || 12500,
+              currency: appointmentInfo.currency || 'LKR',
+            },
       });
       setMsg(res.data.message);
       // Show success notification
@@ -405,24 +430,120 @@ const PaymentPage = () => {
                       onClick={() => {
                         try {
                           const doc = new jsPDF();
-                          const yStart = 20;
-                          doc.setFontSize(18);
-                          doc.text("Payment Receipt", 105, 15, { align: "center" });
+                          
+                          // Header with colored background
+                          doc.setFillColor(91, 126, 87); // #5B7E57
+                          doc.rect(0, 0, 210, 40, 'F');
+                          
+                          // Title
+                          doc.setTextColor(255, 255, 255);
+                          doc.setFontSize(24);
+                          doc.setFont(undefined, 'bold');
+                          doc.text("PAYMENT RECEIPT", 105, 20, { align: "center" });
+                          
+                          doc.setFontSize(10);
+                          doc.setFont(undefined, 'normal');
+                          doc.text("Smart Healthcare System", 105, 30, { align: "center" });
+                          
+                          // Reset text color
+                          doc.setTextColor(0, 0, 0);
+                          
+                          // Receipt info box
+                          let y = 55;
+                          doc.setFillColor(245, 247, 250);
+                          doc.roundedRect(15, y, 180, 25, 3, 3, 'F');
+                          
+                          doc.setFontSize(11);
+                          doc.setFont(undefined, 'bold');
+                          doc.text("Transaction Details", 20, y + 8);
+                          doc.setFont(undefined, 'normal');
+                          doc.setFontSize(9);
+                          doc.text(`ID: ${lastPayment.transactionId || "-"}`, 20, y + 15);
+                          doc.text(`Date: ${new Date(lastPayment.timestamp || Date.now()).toLocaleString()}`, 20, y + 21);
+                          
+                          // Status badge
+                          const status = lastPayment.status || "Success";
+                          doc.setFillColor(34, 197, 94); // green
+                          doc.roundedRect(150, y + 5, 30, 8, 2, 2, 'F');
+                          doc.setTextColor(255, 255, 255);
+                          doc.setFontSize(9);
+                          doc.setFont(undefined, 'bold');
+                          doc.text(status, 165, y + 10, { align: "center" });
+                          doc.setTextColor(0, 0, 0);
+                          
+                          // Appointment Information
+                          y = 95;
+                          doc.setFont(undefined, 'bold');
                           doc.setFontSize(12);
-                          let y = yStart;
-                          const rows = [
-                            ["Appointment", "Dr Kusalya Widanagama - X-Ray Scanning"],
-                            ["Transaction ID", String(lastPayment.transactionId || "-")],
-                            ["Payment Method", "Card"],
-                            ["Amount", String(lastPayment.amount != null ? lastPayment.amount : "-")],
-                            ["Status", String(lastPayment.status || "-")],
-                            ["Date", new Date(lastPayment.timestamp || Date.now()).toLocaleString()],
+                          doc.text("Appointment Information", 20, y);
+                          
+                          doc.setDrawColor(200, 200, 200);
+                          doc.line(20, y + 3, 190, y + 3);
+                          
+                          y += 12;
+                          doc.setFontSize(10);
+                          doc.setFont(undefined, 'normal');
+                          
+                          const infoRows = [
+                            ["Appointment ID:", appointmentInfo.appointmentId || "N/A"],
+                            ["Doctor:", appointmentInfo.doctorName || "N/A"],
+                            ["Service:", appointmentInfo.specialty || appointmentInfo.type || "N/A"],
+                            ["Appointment Date:", appointmentInfo.isoDate ? new Date(appointmentInfo.isoDate).toLocaleDateString() : "N/A"],
                           ];
-                          rows.forEach(([label, value]) => {
-                            doc.text(`${label}:`, 20, y);
+                          
+                          infoRows.forEach(([label, value]) => {
+                            doc.setFont(undefined, 'bold');
+                            doc.text(label, 25, y);
+                            doc.setFont(undefined, 'normal');
                             doc.text(String(value), 70, y);
-                            y += 10;
+                            y += 8;
                           });
+                          
+                          // Payment Information
+                          y += 10;
+                          doc.setFont(undefined, 'bold');
+                          doc.setFontSize(12);
+                          doc.text("Payment Information", 20, y);
+                          
+                          doc.setDrawColor(200, 200, 200);
+                          doc.line(20, y + 3, 190, y + 3);
+                          
+                          y += 12;
+                          doc.setFontSize(10);
+                          
+                          const paymentRows = [
+                            ["Payment Method:", "Card Payment"],
+                            ["Card Number:", lastPayment.cardLast4 ? `**** **** **** ${lastPayment.cardLast4}` : "N/A"],
+                          ];
+                          
+                          paymentRows.forEach(([label, value]) => {
+                            doc.setFont(undefined, 'bold');
+                            doc.text(label, 25, y);
+                            doc.setFont(undefined, 'normal');
+                            doc.text(String(value), 70, y);
+                            y += 8;
+                          });
+                          
+                          // Amount box (highlighted)
+                          y += 10;
+                          doc.setFillColor(91, 126, 87);
+                          doc.roundedRect(15, y, 180, 20, 3, 3, 'F');
+                          
+                          doc.setTextColor(255, 255, 255);
+                          doc.setFontSize(11);
+                          doc.text("Total Amount Paid", 20, y + 8);
+                          doc.setFontSize(16);
+                          doc.setFont(undefined, 'bold');
+                          const amountText = `${appointmentInfo.currency || 'LKR'} ${lastPayment.amount != null ? lastPayment.amount.toLocaleString() : "-"}`;
+                          doc.text(amountText, 190, y + 13, { align: "right" });
+                          
+                          // Footer
+                          doc.setTextColor(128, 128, 128);
+                          doc.setFontSize(8);
+                          doc.setFont(undefined, 'normal');
+                          doc.text("Thank you for choosing Smart Healthcare System", 105, 270, { align: "center" });
+                          doc.text("For inquiries, please contact: support@smarthealthcare.com", 105, 277, { align: "center" });
+                          
                           doc.save(`receipt_${lastPayment.transactionId || Date.now()}.pdf`);
                         } catch (e) {
                           Swal.fire({ title: "Error", text: "Failed to generate receipt", icon: "error" });
@@ -487,25 +608,121 @@ const PaymentPage = () => {
                       onClick={() => {
                         try {
                           const doc = new jsPDF();
-                          const yStart = 20;
-                          doc.setFontSize(18);
-                          doc.text("Insurance Payment Receipt", 105, 15, { align: "center" });
+                          
+                          // Header with colored background
+                          doc.setFillColor(91, 126, 87); // #5B7E57
+                          doc.rect(0, 0, 210, 40, 'F');
+                          
+                          // Title
+                          doc.setTextColor(255, 255, 255);
+                          doc.setFontSize(24);
+                          doc.setFont(undefined, 'bold');
+                          doc.text("INSURANCE RECEIPT", 105, 20, { align: "center" });
+                          
+                          doc.setFontSize(10);
+                          doc.setFont(undefined, 'normal');
+                          doc.text("Smart Healthcare System", 105, 30, { align: "center" });
+                          
+                          // Reset text color
+                          doc.setTextColor(0, 0, 0);
+                          
+                          // Receipt info box
+                          let y = 55;
+                          doc.setFillColor(245, 247, 250);
+                          doc.roundedRect(15, y, 180, 25, 3, 3, 'F');
+                          
+                          doc.setFontSize(11);
+                          doc.setFont(undefined, 'bold');
+                          doc.text("Transaction Details", 20, y + 8);
+                          doc.setFont(undefined, 'normal');
+                          doc.setFontSize(9);
+                          doc.text(`ID: ${lastInsurancePayment.transactionId || "-"}`, 20, y + 15);
+                          doc.text(`Date: ${new Date(lastInsurancePayment.timestamp || Date.now()).toLocaleString()}`, 20, y + 21);
+                          
+                          // Status badge
+                          const status = lastInsurancePayment.status || "Success";
+                          doc.setFillColor(34, 197, 94); // green
+                          doc.roundedRect(150, y + 5, 30, 8, 2, 2, 'F');
+                          doc.setTextColor(255, 255, 255);
+                          doc.setFontSize(9);
+                          doc.setFont(undefined, 'bold');
+                          doc.text(status, 165, y + 10, { align: "center" });
+                          doc.setTextColor(0, 0, 0);
+                          
+                          // Appointment Information
+                          y = 95;
+                          doc.setFont(undefined, 'bold');
                           doc.setFontSize(12);
-                          let y = yStart;
-                          const rows = [
-                            ["Appointment", "Dr Kusalya Widanagama - X-Ray Scanning"],
-                            ["Transaction ID", String(lastInsurancePayment.transactionId || "-")],
-                            ["Policy Number", lastInsurancePayment.policyNumber],
-                            ["Provider", lastInsurancePayment.provider],
-                            ["Insured Name", lastInsurancePayment.insuredName],
-                            ["Status", String(lastInsurancePayment.status || "-")],
-                            ["Date", new Date(lastInsurancePayment.timestamp || Date.now()).toLocaleString()],
+                          doc.text("Appointment Information", 20, y);
+                          
+                          doc.setDrawColor(200, 200, 200);
+                          doc.line(20, y + 3, 190, y + 3);
+                          
+                          y += 12;
+                          doc.setFontSize(10);
+                          doc.setFont(undefined, 'normal');
+                          
+                          const infoRows = [
+                            ["Appointment ID:", appointmentInfo.appointmentId || "N/A"],
+                            ["Doctor:", appointmentInfo.doctorName || "N/A"],
+                            ["Service:", appointmentInfo.specialty || appointmentInfo.type || "N/A"],
+                            ["Appointment Date:", appointmentInfo.isoDate ? new Date(appointmentInfo.isoDate).toLocaleDateString() : "N/A"],
                           ];
-                          rows.forEach(([label, value]) => {
-                            doc.text(`${label}:`, 20, y);
+                          
+                          infoRows.forEach(([label, value]) => {
+                            doc.setFont(undefined, 'bold');
+                            doc.text(label, 25, y);
+                            doc.setFont(undefined, 'normal');
                             doc.text(String(value), 70, y);
-                            y += 10;
+                            y += 8;
                           });
+                          
+                          // Insurance Information
+                          y += 10;
+                          doc.setFont(undefined, 'bold');
+                          doc.setFontSize(12);
+                          doc.text("Insurance Information", 20, y);
+                          
+                          doc.setDrawColor(200, 200, 200);
+                          doc.line(20, y + 3, 190, y + 3);
+                          
+                          y += 12;
+                          doc.setFontSize(10);
+                          
+                          const insuranceRows = [
+                            ["Policy Number:", lastInsurancePayment.policyNumber || "N/A"],
+                            ["Provider:", lastInsurancePayment.provider || "N/A"],
+                            ["Insured Name:", lastInsurancePayment.insuredName || "N/A"],
+                          ];
+                          
+                          insuranceRows.forEach(([label, value]) => {
+                            doc.setFont(undefined, 'bold');
+                            doc.text(label, 25, y);
+                            doc.setFont(undefined, 'normal');
+                            doc.text(String(value), 70, y);
+                            y += 8;
+                          });
+                          
+                          // Amount box (highlighted)
+                          y += 10;
+                          doc.setFillColor(91, 126, 87);
+                          doc.roundedRect(15, y, 180, 20, 3, 3, 'F');
+                          
+                          doc.setTextColor(255, 255, 255);
+                          doc.setFontSize(11);
+                          doc.text("Total Amount", 20, y + 8);
+                          doc.setFontSize(16);
+                          doc.setFont(undefined, 'bold');
+                          const amountText = `${appointmentInfo.currency || 'LKR'} ${appointmentInfo.amount ? appointmentInfo.amount.toLocaleString() : "-"}`;
+                          doc.text(amountText, 190, y + 13, { align: "right" });
+                          
+                          // Footer
+                          doc.setTextColor(128, 128, 128);
+                          doc.setFontSize(8);
+                          doc.setFont(undefined, 'normal');
+                          doc.text("Thank you for choosing Smart Healthcare System", 105, 270, { align: "center" });
+                          doc.text("For inquiries, please contact: support@smarthealthcare.com", 105, 277, { align: "center" });
+                          
                           doc.save(`insurance_receipt_${lastInsurancePayment.transactionId || Date.now()}.pdf`);
                         } catch (e) {
                           Swal.fire({ title: "Error", text: "Failed to generate receipt", icon: "error" });
@@ -524,19 +741,35 @@ const PaymentPage = () => {
         {/* Right Frame - Appointment */}
         <div className="w-full md:w-1/2 flex-1 flex flex-col bg-[#BFD6B8] p-6 md:p-12 max-h-[700px] overflow-auto my-0">
         <div className="w-full">
-          <h3 className="text-lg font-semibold mb-3">Appointment</h3>
-          <div className="flex justify-between mb-1">
-            <span>Dr Kusalya Widanagama</span>
-            <span>5000.00</span>
+          <h3 className="text-lg font-semibold mb-3">Appointment Details</h3>
+          <div className="flex justify-between mb-2">
+            <span className="font-medium">Appointment ID:</span>
+            <span>{appointmentInfo.appointmentId || 'N/A'}</span>
           </div>
-          <div className="flex justify-between mb-1">
-            <span>X-Ray Scanning</span>
-            <span>7500.00</span>
+          <div className="flex justify-between mb-2">
+            <span className="font-medium">Doctor:</span>
+            <span>{appointmentInfo.doctorName || 'N/A'}</span>
           </div>
+          <div className="flex justify-between mb-2">
+            <span className="font-medium">Service:</span>
+            <span>{appointmentInfo.specialty || appointmentInfo.type || 'N/A'}</span>
+          </div>
+          {appointmentInfo.isoDate && (
+            <div className="flex justify-between mb-2">
+              <span className="font-medium">Date:</span>
+              <span>{new Date(appointmentInfo.isoDate).toLocaleDateString()}</span>
+            </div>
+          )}
+          {appointmentInfo.notes && (
+            <div className="flex flex-col mb-2">
+              <span className="font-medium mb-1">Notes:</span>
+              <span className="text-sm text-gray-700">{appointmentInfo.notes}</span>
+            </div>
+          )}
           <hr className="border-gray-500 my-3" />
-          <div className="flex justify-between font-bold">
-            <span>Total Amount</span>
-            <span>12500.00</span>
+          <div className="flex justify-between font-bold text-lg">
+            <span>Total Amount:</span>
+            <span>{appointmentInfo.currency || 'LKR'} {appointmentInfo.amount ? parseFloat(appointmentInfo.amount).toFixed(2) : '0.00'}</span>
           </div>
         </div>
       </div>
