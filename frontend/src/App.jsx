@@ -122,10 +122,7 @@ export default function App() {
               <Route path="/payment" element={<PaymentPage />} />
 
               {/* Medical Records Demo Route (backward compatibility) */}
-              <Route
-                path="/records"
-                element={<Records patientId={DEMO_PATIENT_ID} role={ROLE} />}
-              />
+              <Route path="/records" element={<Records patientId={DEMO_PATIENT_ID} role={ROLE} />} />
 
               {/* Default redirect to login */}
               <Route path="/" element={<Navigate to="/login" replace />} />

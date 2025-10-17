@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import Swal from "sweetalert2";
 import axios from "axios";
@@ -10,7 +10,8 @@ import { jsPDF } from "jspdf";
 
 const PaymentPage = () => {
   const { state } = useLocation();
-  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
   // Get appointment/payment info from location state
   const appointmentInfo = state?.payment || {};
   const patientId = user?.id || appointmentInfo.patientId;
@@ -52,6 +53,9 @@ const PaymentPage = () => {
           text: res.data.message || "Your insurance payment was processed successfully.",
           icon: "success",
           confirmButtonColor: "#5B7E57",
+        }).then(() => {
+          // Navigate to appointments page after user clicks OK
+          navigate("/appointments");
         });
         setLastInsurancePayment({
           ...insurance,
@@ -258,6 +262,9 @@ const PaymentPage = () => {
           text: res.data.message || "Your payment was processed successfully.",
           icon: "success",
           confirmButtonColor: "#5B7E57",
+        }).then(() => {
+          // Navigate to appointments page after user clicks OK
+          navigate("/appointments");
         });
       }
       setErrors({});
@@ -272,7 +279,61 @@ const PaymentPage = () => {
   };
 
   return (
-    <div className="w-screen min-h-screen bg-[#DDE5D8] font-sans px-4 md:px-8 py-8 flex flex-col items-stretch">
+    <>
+      {/* Header (Patient Portal Navigation Bar) */}
+      <header className="bg-[#7e957a] text-white">
+        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                />
+              </svg>
+            </div>
+            <div>
+              <span className="font-semibold text-lg">Smart Healthcare System</span>
+              <span className="block text-xs text-white/80">Patient Portal</span>
+            </div>
+          </div>
+          <nav className="hidden md:flex gap-6">
+            <button onClick={() => navigate("/patient")} className="hover:underline transition-all">
+              Home
+            </button>
+            <button onClick={() => navigate("/patient/about")} className="hover:underline transition-all">
+              About
+            </button>
+            <button onClick={() => navigate("/patient/appointments")} className="hover:underline transition-all">
+              Appointments
+            </button>
+            <button onClick={() => navigate("/patient/payments")} className="hover:underline transition-all">
+              Payments
+            </button>
+          </nav>
+          <div className="flex items-center gap-4">
+            <div className="text-right">
+              <div className="text-sm font-medium">{user?.username}</div>
+              <div className="text-xs text-white/80">Patient</div>
+            </div>
+            <button
+              onClick={logout}
+              className="px-4 py-2 rounded-lg bg-[#5b6f59] hover:bg-[#4f614e] transition-colors"
+            >
+              Logout
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <div className="w-screen min-h-screen bg-[#DDE5D8] font-sans px-4 md:px-8 py-8 flex flex-col items-stretch">
       {/* Payment Method Tabs */}
       {/* Modern tab bar using divs, highlight, and no button look */}
       <div className="flex justify-center mb-8">
@@ -818,6 +879,7 @@ const PaymentPage = () => {
         </div>
       )}
     </div>
+    </>
   );
 };
 

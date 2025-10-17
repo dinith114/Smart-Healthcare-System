@@ -83,11 +83,11 @@ describe("Detailed Records Controller Tests", () => {
       req.auth = { actorId: "provider123", role: "Doctor" };
 
       Patient.findById = jest.fn().mockResolvedValue(mockPatient);
-      DetailedMedicalRecord.prototype.save = jest.fn().mockResolvedValue({
-        _id: "record123",
-        ...mockRecordData,
-        patientId: "patient123",
-        providerId: "provider123",
+      
+      // Mock save to modify the instance and return it
+      DetailedMedicalRecord.prototype.save = jest.fn().mockImplementation(function() {
+        this._id = "record123";
+        return Promise.resolve(this);
       });
     });
 
@@ -224,6 +224,7 @@ describe("Detailed Records Controller Tests", () => {
 
       test("should handle missing patientId parameter", async () => {
         req.params = {};
+        Patient.findById = jest.fn().mockResolvedValue(null);
 
         await createDetailedRecord(req, res);
 
