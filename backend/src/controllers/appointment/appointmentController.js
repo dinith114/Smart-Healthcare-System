@@ -1,92 +1,121 @@
-// src/controllers/appointmentController.js
-const Appointment = require("../../models/appointment/appointmentModel");
-const { isSlotAvailable } = require("../../utils/appointment/slotUtils");
-const { sendNotification } = require("../../services/appointment/notificationService");
+// src / backend / appointment / appointmentController.js
 
-// 🟢 Create Appointment
+const Appointment = require("../../models/appointment/appointmentModel");
+const { isSlotAvailable, normalizeToSlot } = require("../../utils/appointment/slotUtils");
+const { sendNotification, queueReminder24h } = require("../../services/appointment/notificationService");
+const AuditLog = require("../../models/AuditLog");
+
+// Create
 exports.createAppointment = async (req, res) => {
   try {
     const { patientId, doctorId, date, notes } = req.body;
 
-    const slotFree = await isSlotAvailable(doctorId, date);
-    if (!slotFree) {
-      return res.status(400).json({ message: "Selected time no longer available" });
+    // basic validation
+    if (!patientId || !doctorId || !date) {
+      return res.status(400).json({ message: "patientId, doctorId, and date are required" });
     }
 
-    const appointment = await Appointment.create({ patientId, doctorId, date, notes });
-    await sendNotification(patientId, "Appointment Confirmed", `Your appointment is confirmed for ${date}`);
+    const slot = normalizeToSlot(date);
+    const ok = await isSlotAvailable(doctorId, patientId, slot.toISOString());
+    if (!ok) {
+      return res.status(409).json({ message: "Selected time no longer available." });
+    }
 
-    res.status(201).json({
-      message: "Appointment booked successfully",
-      appointment,
+    const appointment = await Appointment.create({
+      patientId, doctorId, date: slot, notes, status: "Confirmed",
     });
-  } catch (error) {
-    console.error("❌ Error creating appointment:", error);
+
+    // Notifications & reminder
+    await sendNotification(patientId, `Appointment confirmed on ${slot.toISOString()}`);
+    await queueReminder24h(appointment._id, patientId, slot);
+
+    // Audit
+    await AuditLog.create({
+      actorId: patientId,
+      action: "AppointmentCreated",
+      meta: { appointmentId: appointment._id, doctorId, date: slot },
+    });
+
+    res.status(201).json({ message: "Appointment created successfully", appointment });
+  } catch (e) {
+    console.error(e);
     res.status(500).json({ message: "System error. Please try again later." });
   }
 };
 
-// 🟠 Reschedule Appointment
+// Reschedule
 exports.rescheduleAppointment = async (req, res) => {
   try {
     const { id } = req.params;
     const { newDate } = req.body;
+    const appt = await Appointment.findById(id);
+    if (!appt) return res.status(404).json({ message: "Appointment not found" });
 
-    const appointment = await Appointment.findById(id);
-    if (!appointment) return res.status(404).json({ message: "Appointment not found" });
-
-    const slotFree = await isSlotAvailable(appointment.doctorId, newDate);
-    if (!slotFree) {
-      return res.status(400).json({ message: "Selected time no longer available" });
+    const slot = normalizeToSlot(newDate);
+    const ok = await isSlotAvailable(String(appt.doctorId), String(appt.patientId), slot.toISOString());
+    if (!ok) {
+      return res.status(409).json({ message: "Selected time no longer available." });
     }
 
-    appointment.date = newDate;
-    appointment.status = "Rescheduled";
-    await appointment.save();
+    appt.date = slot;
+    appt.status = "Rescheduled";
+    await appt.save();
 
-    await sendNotification(
-      appointment.patientId,
-      "Appointment Rescheduled",
-      `Your appointment has been rescheduled to ${newDate}`
-    );
+    await sendNotification(String(appt.patientId), `Appointment rescheduled to ${slot.toISOString()}`);
+    await queueReminder24h(appt._id, String(appt.patientId), slot);
 
-    res.json({ message: "Appointment rescheduled successfully", appointment });
-  } catch (error) {
-    console.error("❌ Error rescheduling appointment:", error);
+    await AuditLog.create({
+      actorId: String(appt.patientId),
+      action: "AppointmentRescheduled",
+      meta: { appointmentId: appt._id, doctorId: String(appt.doctorId), date: slot },
+    });
+
+    res.json({ message: "Appointment rescheduled successfully", appointment: appt });
+  } catch (e) {
+    console.error(e);
     res.status(500).json({ message: "System error. Please try again later." });
   }
 };
 
-// 🔴 Cancel Appointment
+// Cancel
 exports.cancelAppointment = async (req, res) => {
   try {
     const { id } = req.params;
+    const appt = await Appointment.findById(id);
+    if (!appt) return res.status(404).json({ message: "Appointment not found" });
 
-    const appointment = await Appointment.findById(id);
-    if (!appointment) return res.status(404).json({ message: "Appointment not found" });
+    appt.status = "Cancelled";
+    await appt.save();
 
-    appointment.status = "Cancelled";
-    await appointment.save();
+    await sendNotification(String(appt.patientId), `Appointment on ${appt.date.toISOString()} cancelled`);
 
-    await sendNotification(
-      appointment.patientId,
-      "Appointment Cancelled",
-      "Your appointment has been cancelled successfully."
-    );
+    await AuditLog.create({
+      actorId: String(appt.patientId),
+      action: "AppointmentCancelled",
+      meta: { appointmentId: appt._id, doctorId: String(appt.doctorId), date: appt.date },
+    });
 
-    res.json({ message: "Appointment cancelled successfully", appointment });
-  } catch (error) {
-    console.error("❌ Error cancelling appointment:", error);
+    res.json({ message: "Appointment cancelled successfully", appointment: appt });
+  } catch (e) {
+    console.error(e);
     res.status(500).json({ message: "System error. Please try again later." });
   }
 };
 
-// 🔍 View Appointments (for testing)
-exports.getAppointments = async (_req, res) => {
+// List (patient sees own; doctor/staff can be extended by role)
+exports.getAppointments = async (req, res) => {
   try {
-    const appointments = await Appointment.find().populate("doctorId").populate("patientId");
-    res.json(appointments);
-  } catch (error) {
-    res.status(500).json({ message: "Failed to fetch appointments" });
+    const user = req.user; // set by authenticate
+    const q = user?.role === "doctor"
+      ? { doctorId: user.id }
+      : { patientId: user.id };
+
+    const list = await Appointment.find(q)
+      .populate("doctorId", "username specialty")
+      .populate("patientId", "username");
+    res.json(list);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ message: "System error. Please try again later." });
   }
 };
