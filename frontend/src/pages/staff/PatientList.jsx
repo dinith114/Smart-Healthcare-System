@@ -52,7 +52,7 @@ export default function PatientList() {
           Registered Patients
         </h2>
         <p className="text-sm text-gray-600 mt-1">
-          View and manage patients you have registered
+          View and manage all registered patients
         </p>
       </div>
 

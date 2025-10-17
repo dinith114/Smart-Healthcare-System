@@ -1,23 +1,27 @@
 module.exports = {
   testEnvironment: 'node',
-  coveragePathIgnorePatterns: ['/node_modules/'],
-  testMatch: ['**/__tests__/**/*.js', '**/?(*.)+(spec|test).js'],
-  testPathIgnorePatterns: [
-    '/node_modules/',
-    '/src/tests/test\\.js$',
-    '/src/controllers/test\\.js$',
-    '/src/services/test\\.js$',
-    '/src/utils/test\\.js$',
-  ],
+  coverageDirectory: 'coverage',
   collectCoverageFrom: [
     'src/**/*.js',
-    '!src/tests/**',
     '!src/server.js',
     '!src/seeds/**',
+    '!src/tests/**'
   ],
+  coverageThreshold: {
+    global: {
+      branches: 80,
+      functions: 80,
+      lines: 80,
+      statements: 80
+    }
+  },
+  testMatch: ['**/tests/**/*.test.js'],
+  verbose: true,
+  setupFilesAfterEnv: ['<rootDir>/src/tests/setup.js'],
   verbose: true,
   forceExit: true,
   clearMocks: true,
   resetMocks: true,
   restoreMocks: true,
 };
+

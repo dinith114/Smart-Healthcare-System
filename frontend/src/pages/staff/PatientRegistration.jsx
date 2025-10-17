@@ -29,8 +29,12 @@ export default function PatientRegistration() {
     setError("");
     setLoading(true);
 
+    // Log form data for debugging
+    console.log("Submitting patient data:", formData);
+
     try {
       const response = await api.post("/staff/patients", formData);
+      console.log("Registration successful:", response.data);
       setRegistrationResult(response.data);
       // Reset form
       setFormData({
@@ -43,29 +47,51 @@ export default function PatientRegistration() {
         nic: ""
       });
     } catch (err) {
+      console.error("Registration error:", err.response?.data || err.message);
       setError(err.response?.data?.message || "Failed to register patient");
     } finally {
       setLoading(false);
     }
   };
 
+  const handleCancel = () => {
+    setFormData({
+      name: "",
+      email: "",
+      phone: "",
+      dob: "",
+      address: "",
+      gender: "Male",
+      nic: ""
+    });
+    setError("");
+  };
+
   return (
-    <div>
-      <div className="mb-6">
-        <h2 className="text-2xl font-semibold text-[#2d3b2b]">Register New Patient</h2>
-        <p className="text-sm text-gray-600 mt-1">
-          Fill in patient information to create account and generate health card
-        </p>
-      </div>
+    <div className="max-w-2xl mx-auto">
+      {/* Form Card with Sage Green Background */}
+      <div className="bg-[#a8b9a0] rounded-3xl p-8 shadow-lg">
+        {/* Header with Icon */}
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <svg 
+              className="w-6 h-6 text-[#2d3b2b]" 
+              fill="currentColor" 
+              viewBox="0 0 20 20"
+            >
+              <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
+            </svg>
+            <h2 className="text-2xl font-bold text-[#2d3b2b]">Patient Registration</h2>
+          </div>
+        </div>
 
-      {error && <ErrorBanner message={error} onDismiss={() => setError("")} />}
+        {error && <ErrorBanner message={error} onDismiss={() => setError("")} />}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
           {/* Full Name */}
           <div>
-            <label className="block text-sm font-medium text-[#2d3b2b] mb-1">
-              Full Name *
+            <label className="block text-sm font-medium text-[#2d3b2b] mb-2">
+              Full Name
             </label>
             <input
               type="text"
@@ -73,15 +99,15 @@ export default function PatientRegistration() {
               value={formData.name}
               onChange={handleChange}
               required
-              className="w-full px-4 py-2 border border-[#b9c8b4] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7e957a]"
+              className="w-full px-4 py-3 bg-white border-0 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5b6f59] shadow-sm"
               placeholder="Enter full name"
             />
           </div>
 
-          {/* NIC */}
+          {/* NIC Number */}
           <div>
-            <label className="block text-sm font-medium text-[#2d3b2b] mb-1">
-              NIC Number *
+            <label className="block text-sm font-medium text-[#2d3b2b] mb-2">
+              NIC Number
             </label>
             <input
               type="text"
@@ -89,18 +115,15 @@ export default function PatientRegistration() {
               value={formData.nic}
               onChange={handleChange}
               required
-              className="w-full px-4 py-2 border border-[#b9c8b4] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7e957a]"
+              className="w-full px-4 py-3 bg-white border-0 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5b6f59] shadow-sm"
               placeholder="123456789V or 200012345678"
             />
-            <p className="text-xs text-gray-500 mt-1">
-              Format: 9 digits + V or 12 digits
-            </p>
           </div>
 
           {/* Email */}
           <div>
-            <label className="block text-sm font-medium text-[#2d3b2b] mb-1">
-              Email Address *
+            <label className="block text-sm font-medium text-[#2d3b2b] mb-2">
+              Email Address
             </label>
             <input
               type="email"
@@ -108,31 +131,15 @@ export default function PatientRegistration() {
               value={formData.email}
               onChange={handleChange}
               required
-              className="w-full px-4 py-2 border border-[#b9c8b4] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7e957a]"
+              className="w-full px-4 py-3 bg-white border-0 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5b6f59] shadow-sm"
               placeholder="patient@example.com"
-            />
-          </div>
-
-          {/* Phone */}
-          <div>
-            <label className="block text-sm font-medium text-[#2d3b2b] mb-1">
-              Mobile Number * (used for login)
-            </label>
-            <input
-              type="tel"
-              name="phone"
-              value={formData.phone}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-2 border border-[#b9c8b4] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7e957a]"
-              placeholder="0771234567"
             />
           </div>
 
           {/* Date of Birth */}
           <div>
-            <label className="block text-sm font-medium text-[#2d3b2b] mb-1">
-              Date of Birth *
+            <label className="block text-sm font-medium text-[#2d3b2b] mb-2">
+              Date of Birth
             </label>
             <input
               type="date"
@@ -140,70 +147,87 @@ export default function PatientRegistration() {
               value={formData.dob}
               onChange={handleChange}
               required
-              className="w-full px-4 py-2 border border-[#b9c8b4] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7e957a]"
+              className="w-full px-4 py-3 bg-white border-0 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5b6f59] shadow-sm"
             />
           </div>
 
           {/* Gender */}
           <div>
-            <label className="block text-sm font-medium text-[#2d3b2b] mb-1">
-              Gender *
+            <label className="block text-sm font-medium text-[#2d3b2b] mb-2">
+              Gender
             </label>
             <select
               name="gender"
               value={formData.gender}
               onChange={handleChange}
               required
-              className="w-full px-4 py-2 border border-[#b9c8b4] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7e957a]"
+              className="w-full px-4 py-3 bg-white border-0 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5b6f59] shadow-sm"
             >
               <option value="Male">Male</option>
               <option value="Female">Female</option>
               <option value="Other">Other</option>
             </select>
           </div>
-        </div>
 
-        {/* Address */}
-        <div>
-          <label className="block text-sm font-medium text-[#2d3b2b] mb-1">
-            Address
-          </label>
-          <textarea
-            name="address"
-            value={formData.address}
-            onChange={handleChange}
-            rows={3}
-            className="w-full px-4 py-2 border border-[#b9c8b4] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7e957a]"
-            placeholder="Enter full address"
-          />
-        </div>
+          {/* Address */}
+          <div>
+            <label className="block text-sm font-medium text-[#2d3b2b] mb-2">
+              Address
+            </label>
+            <textarea
+              name="address"
+              value={formData.address}
+              onChange={handleChange}
+              rows={3}
+              className="w-full px-4 py-3 bg-white border-0 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5b6f59] shadow-sm resize-none"
+              placeholder="Enter full address"
+            />
+          </div>
 
-        {/* Submit Button */}
-        <div className="flex justify-end pt-4">
-          <button
-            type="submit"
-            disabled={loading}
-            className="px-8 py-3 bg-[#7e957a] text-white rounded-lg font-semibold hover:bg-[#6e8a69] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-          >
-            {loading ? (
-              <>
-                <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Registering...
-              </>
-            ) : (
-              <>
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-                Register Patient
-              </>
-            )}
-          </button>
-        </div>
-      </form>
+          {/* Contact Number */}
+          <div>
+            <label className="block text-sm font-medium text-[#2d3b2b] mb-2">
+              Contact Number
+            </label>
+            <input
+              type="tel"
+              name="phone"
+              value={formData.phone}
+              onChange={handleChange}
+              required
+              className="w-full px-4 py-3 bg-white border-0 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5b6f59] shadow-sm"
+              placeholder="0771234567"
+            />
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex justify-center gap-3 pt-4">
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-8 py-2.5 bg-[#5b6f59] text-white rounded-lg font-medium hover:bg-[#4f614e] transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
+            >
+              {loading ? "Submitting..." : "Submit"}
+            </button>
+            <button
+              type="button"
+              onClick={handleCancel}
+              disabled={loading}
+              className="px-8 py-2.5 bg-white text-[#5b6f59] border-2 border-[#5b6f59] rounded-lg font-medium hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Cancel
+            </button>
+          </div>
+
+          {/* Support Text */}
+          <div className="text-center text-sm text-[#2d3b2b] pt-4">
+            Need help? Contact our support team at{" "}
+            <a href="mailto:support@hospital.co" className="text-[#1a4d2e] font-medium hover:underline">
+              support@hospital.co
+            </a>
+          </div>
+        </form>
+      </div>
 
       {/* Credentials Modal */}
       {registrationResult && (

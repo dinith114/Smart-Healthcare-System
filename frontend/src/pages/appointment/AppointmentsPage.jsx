@@ -1,18 +1,25 @@
 import { useEffect, useMemo, useState } from "react";
 import { listAppointments } from "../../services/appointment/appointments";
 import dayjs from "dayjs";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
+import PatientNavBar from "../../components/patient/PatientNavBar";
+import Footer from "../../components/patient/Footer";
 
 export default function AppointmentsPage() {
   const [items, setItems] = useState([]);
   const [q, setQ] = useState("");
   const [sort, setSort] = useState("date");
+  const [loading, setLoading] = useState(true);
   const nav = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
-    listAppointments().then(setItems);
-  }, []);
+    setLoading(true);
+    listAppointments()
+      .then(setItems)
+      .finally(() => setLoading(false));
+  }, [location.pathname]);
 
   const filtered = useMemo(() => {
     const f = items.filter((a) => {
@@ -32,16 +39,18 @@ export default function AppointmentsPage() {
   const prettyTime = (d) => dayjs(d).format("hh:mm A");
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#8aa082] to-[#7e957a] p-4 flex justify-center">
-      <motion.div
-        initial={{ opacity: 0, y: 18 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.45 }}
-        className="w-full max-w-5xl"
-      >
-        {/* Top bar */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-          <h1 className="text-3xl font-bold text-white">Appointments</h1>
+    <div className="min-h-screen bg-[#8aa082]/30 flex flex-col">
+      <PatientNavBar />
+      
+      <main className="flex-grow max-w-6xl mx-auto px-6 py-6 w-full">
+        <motion.div
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.45 }}
+        >
+          {/* Top bar */}
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+            <h1 className="text-3xl font-bold text-[#2d3b2b]">My Appointments</h1>
           <div className="flex items-center gap-3">
             <input
               className="px-4 py-2 rounded-lg border border-[#b9c8b4] bg-white focus:outline-none focus:ring-2 focus:ring-[#7e957a]"
@@ -58,16 +67,19 @@ export default function AppointmentsPage() {
               <option value="doctor">sort by doctor</option>
             </select>
             <button
-              className="bg-white/20 text-white border border-white/40 px-4 py-2 rounded-lg hover:bg-white/30"
+              className="bg-[#7e957a] text-white px-4 py-2 rounded-lg hover:bg-[#6e8a69] transition-colors flex items-center gap-2"
               onClick={() => nav("/appointments/new")}
             >
-              Make Appointment
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Book Appointment
             </button>
           </div>
         </div>
 
         {/* Card */}
-        <div className="bg-white rounded-2xl shadow-2xl p-6">
+        <div className="bg-white rounded-2xl border border-[#b9c8b4] shadow-lg p-6">
           {filtered.length === 0 ? (
             <div className="text-gray-600 text-center">
               No appointments
@@ -108,7 +120,10 @@ export default function AppointmentsPage() {
             </ul>
           )}
         </div>
-      </motion.div>
+        </motion.div>
+      </main>
+
+      <Footer />
     </div>
   );
 }

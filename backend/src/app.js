@@ -41,7 +41,12 @@ app.get("/api/health", (_req, res) => res.json({ ok: true }));
 // Payment routes
 const paymentRoutes = require("./routes/payment/paymentRoutes");
 app.use("/api/payment", paymentRoutes);
+app.use("/api/payments", paymentRoutes); // Alias for plural form
 app.use("/api/insurance-payment", insurancePayRoutes);
+
+// QR Verification routes
+const qrVerificationRoutes = require("./routes/qrVerificationRoutes");
+app.use("/api/qr", qrVerificationRoutes);
 // Feature routes
 app.use("/api/auth", authRouter);
 

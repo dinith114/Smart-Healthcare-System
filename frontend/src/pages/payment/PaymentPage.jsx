@@ -53,6 +53,9 @@ const PaymentPage = () => {
           text: res.data.message || "Your insurance payment was processed successfully.",
           icon: "success",
           confirmButtonColor: "#5B7E57",
+        }).then(() => {
+          // Navigate to appointments page after user clicks OK
+          navigate("/appointments");
         });
         setLastInsurancePayment({
           ...insurance,
@@ -259,6 +262,9 @@ const PaymentPage = () => {
           text: res.data.message || "Your payment was processed successfully.",
           icon: "success",
           confirmButtonColor: "#5B7E57",
+        }).then(() => {
+          // Navigate to appointments page after user clicks OK
+          navigate("/appointments");
         });
       }
       setErrors({});

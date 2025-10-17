@@ -119,6 +119,9 @@ exports.registerPatient = async (req, res) => {
         email: patient.email,
         phone: patient.phone,
         nic: patient.nic,
+        dob: patient.dob,
+        gender: patient.gender,
+        address: patient.address
       },
       credentials: {
         username: phone,
@@ -136,7 +139,7 @@ exports.registerPatient = async (req, res) => {
 };
 
 /**
- * Get patients registered by this staff
+ * Get all patients (staff access)
  */
 exports.getPatients = async (req, res) => {
   try {
@@ -150,10 +153,10 @@ exports.getPatients = async (req, res) => {
       return res.status(403).json({ message: "Staff record not found" });
     }
 
-    let query = { registeredBy: staff._id };
+    // Show all patients to staff users
+    let query = {};
     if (search) {
       query = {
-        ...query,
         $or: [
           { name: { $regex: search, $options: "i" } },
           { email: { $regex: search, $options: "i" } },
@@ -168,7 +171,7 @@ exports.getPatients = async (req, res) => {
       .skip(skip)
       .limit(parseInt(limit));
 
-    const total = await Patient.countDocuments({ ...query });
+    const total = await Patient.countDocuments(query);
 
     res.json({
       patients: patients.map((p) => ({

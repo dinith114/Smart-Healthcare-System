@@ -5,6 +5,8 @@ import Calendar from "../components/dashboard/Calendar.jsx";
 import UpcomingAppointments from "../components/dashboard/UpcomingAppointments.jsx";
 import PatientInfoCard from "../components/dashboard/PatientInfoCard.jsx";
 import DashboardButtons from "../components/dashboard/DashboardButtons.jsx";
+import PatientNavBar from "../components/patient/PatientNavBar";
+import Footer from "../components/patient/Footer";
 
 // Modals
 import MedicalInfoModal from "../components/dashboard/modals/MedicalInfoModal.jsx";
@@ -69,50 +71,10 @@ export default function PatientDashboard({ patientId }) {
   };
 
   return (
-    <div className="min-h-screen bg-[#8aa082]/30">
-      {/* top bar */}
-      <header className="bg-[#7e957a] text-white">
-        <div className="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-white/20" />
-            <span className="font-semibold">Smart Healthcare</span>
-          </div>
-          <nav className="hidden md:flex gap-6">
-            <button
-              onClick={() => navigate("/patient")}
-              className="hover:underline transition-all"
-            >
-              Home
-            </button>
-            <button
-              onClick={() => navigate("/patient/about")}
-              className="hover:underline transition-all"
-            >
-              About
-            </button>
-            <button
-              onClick={() => navigate("/patient/appointments")}
-              className="hover:underline transition-all"
-            >
-              Appointments
-            </button>
-            <button
-              onClick={() => navigate("/patient/payments")}
-              className="hover:underline transition-all"
-            >
-              Payments
-            </button>
-          </nav>
-          <button
-            onClick={logout}
-            className="px-4 py-1.5 rounded-full bg-[#5b6f59] hover:bg-[#4f614e]"
-          >
-            Logout
-          </button>
-        </div>
-      </header>
+    <div className="min-h-screen bg-[#8aa082]/30 flex flex-col">
+      <PatientNavBar patientName={summary?.patient?.name} />
 
-      <main className="max-w-6xl mx-auto px-6 py-6">
+      <main className="flex-grow max-w-6xl mx-auto px-6 py-6">
         <div className="flex items-center gap-3 mb-4">
           <button
             onClick={() => navigate("/patient")}
@@ -194,6 +156,8 @@ export default function PatientDashboard({ patientId }) {
         onClose={() => setShowPayments(false)}
         patientId={patientId}
       />
+
+      <Footer />
     </div>
   );
 }

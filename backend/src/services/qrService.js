@@ -3,6 +3,10 @@
 
 const QRCode = require("qrcode");
 const crypto = require("crypto");
+const jwt = require("jsonwebtoken");
+
+const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
+const QR_TOKEN_EXPIRY = "30d"; // QR tokens valid for 30 days
 
 // Use a strong secret (32 bytes derived via SHA-256)
 const QR_SECRET =
@@ -48,29 +52,41 @@ function decryptData(token) {
 }
 
 /**
- * Generate QR with encrypted token
+ * Generate QR with JWT token that links to verification page
  * @param {Object} cardData { patientId, cardNumber, issuedDate }
- * @returns {Promise<{qrCodeData:string, qrCodeImage:string}>}
+ * @returns {Promise<{qrCodeData:string, qrCodeImage:string, verificationUrl:string}>}
  */
 async function generateQRCode(cardData) {
   try {
-    const dataToEncrypt = {
-      patientId: cardData.patientId,
-      cardNumber: cardData.cardNumber,
-      issuedDate: cardData.issuedDate,
-      timestamp: Date.now(),
-    };
+    // Generate secure JWT token
+    const token = jwt.sign(
+      {
+        patientId: cardData.patientId,
+        cardNumber: cardData.cardNumber,
+        type: "qr-verification",
+        iat: Date.now(),
+      },
+      JWT_SECRET,
+      { expiresIn: QR_TOKEN_EXPIRY }
+    );
 
-    const encryptedToken = encryptData(dataToEncrypt);
+    // Create verification URL
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+    const verificationUrl = `${frontendUrl}/verify-health-card/${token}`;
 
-    const qrCodeImage = await QRCode.toDataURL(encryptedToken, {
+    // Generate QR code with the verification URL
+    const qrCodeImage = await QRCode.toDataURL(verificationUrl, {
       errorCorrectionLevel: "H",
       width: 300,
       margin: 2,
       color: { dark: "#2d3b2b", light: "#ffffff" },
     });
 
-    return { qrCodeData: encryptedToken, qrCodeImage };
+    return { 
+      qrCodeData: token, 
+      qrCodeImage,
+      verificationUrl 
+    };
   } catch (error) {
     console.error("QR code generation error:", error);
     throw new Error("Failed to generate QR code");
