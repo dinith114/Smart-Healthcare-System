@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { api } from "../../services/api";
+import { api, getDemoHeaders } from "../../services/api";
 
 export default function UpdateRecordModal({
   open,
@@ -22,10 +22,15 @@ export default function UpdateRecordModal({
     }
     setSaving(true);
     try {
-      const res = await api.post(`/records/${patientId}/encounters`, {
-        note: trimmed,
-        authorRole: "Provider",
-      });
+      const demoHeaders = getDemoHeaders();
+      const res = await api.post(
+        `/records/${patientId}/encounters`,
+        {
+          note: trimmed,
+          authorRole: "Provider",
+        },
+        { headers: demoHeaders }
+      );
       setSaving(false);
       setNote("");
       onSaved?.(res.data);
@@ -33,7 +38,7 @@ export default function UpdateRecordModal({
       alert("Update saved");
     } catch (e) {
       setSaving(false);
-      setErr(e.message);
+      setErr(e.response?.data?.error || e.response?.data?.message || e.message);
     }
   };
 

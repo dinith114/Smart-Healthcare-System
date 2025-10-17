@@ -10,14 +10,14 @@ export default function StaffDashboard() {
   const [activeView, setActiveView] = useState("register");
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
       className="min-h-screen bg-[#8aa082]/30"
     >
       {/* Header */}
-      <motion.header 
+      <motion.header
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.4 }}
@@ -26,12 +26,24 @@ export default function StaffDashboard() {
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
               </svg>
             </div>
             <div>
-              <span className="font-semibold text-lg">Smart Healthcare System</span>
+              <span className="font-semibold text-lg">
+                Smart Healthcare System
+              </span>
               <span className="block text-xs text-white/80">Staff Portal</span>
             </div>
           </div>
@@ -68,18 +80,25 @@ export default function StaffDashboard() {
             }`}
           >
             <div className="flex items-start gap-4">
-              <div className={`p-3 rounded-lg ${
-                activeView === "register" ? "bg-[#7e957a]" : "bg-[#f0f5ef]"
-              }`}>
-                <svg 
+              <div
+                className={`p-3 rounded-lg ${
+                  activeView === "register" ? "bg-[#7e957a]" : "bg-[#f0f5ef]"
+                }`}
+              >
+                <svg
                   className={`w-6 h-6 ${
                     activeView === "register" ? "text-white" : "text-[#7e957a]"
-                  }`} 
-                  fill="none" 
-                  stroke="currentColor" 
+                  }`}
+                  fill="none"
+                  stroke="currentColor"
                   viewBox="0 0 24 24"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
+                  />
                 </svg>
               </div>
               <div>
@@ -102,18 +121,25 @@ export default function StaffDashboard() {
             }`}
           >
             <div className="flex items-start gap-4">
-              <div className={`p-3 rounded-lg ${
-                activeView === "list" ? "bg-[#7e957a]" : "bg-[#f0f5ef]"
-              }`}>
-                <svg 
+              <div
+                className={`p-3 rounded-lg ${
+                  activeView === "list" ? "bg-[#7e957a]" : "bg-[#f0f5ef]"
+                }`}
+              >
+                <svg
                   className={`w-6 h-6 ${
                     activeView === "list" ? "text-white" : "text-[#7e957a]"
-                  }`} 
-                  fill="none" 
-                  stroke="currentColor" 
+                  }`}
+                  fill="none"
+                  stroke="currentColor"
                   viewBox="0 0 24 24"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+                  />
                 </svg>
               </div>
               <div>
@@ -136,18 +162,25 @@ export default function StaffDashboard() {
             }`}
           >
             <div className="flex items-start gap-4">
-              <div className={`p-3 rounded-lg ${
-                activeView === "profile" ? "bg-[#7e957a]" : "bg-[#f0f5ef]"
-              }`}>
-                <svg 
+              <div
+                className={`p-3 rounded-lg ${
+                  activeView === "profile" ? "bg-[#7e957a]" : "bg-[#f0f5ef]"
+                }`}
+              >
+                <svg
                   className={`w-6 h-6 ${
                     activeView === "profile" ? "text-white" : "text-[#7e957a]"
-                  }`} 
-                  fill="none" 
-                  stroke="currentColor" 
+                  }`}
+                  fill="none"
+                  stroke="currentColor"
                   viewBox="0 0 24 24"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                  />
                 </svg>
               </div>
               <div>
@@ -163,7 +196,7 @@ export default function StaffDashboard() {
         </div>
 
         {/* Content Area */}
-        <motion.div 
+        <motion.div
           key={activeView}
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -178,4 +211,3 @@ export default function StaffDashboard() {
     </motion.div>
   );
 }
-

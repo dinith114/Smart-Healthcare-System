@@ -51,6 +51,7 @@ exports.getPatientSummary = async (req, res, next) => {
       address: "No: 51/1, Malabe",
       gender: "Male",
       dob: new Date("1997-01-01"),
+      avatarUrl: null,
     };
 
     res.json({ patient, ...s }); // sends vitals, medications, labs, visits, immunizations

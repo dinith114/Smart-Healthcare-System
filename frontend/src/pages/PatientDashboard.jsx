@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { api } from "../services/api";
+import { useNavigate } from "react-router-dom";
+import { api, getDemoHeaders } from "../services/api";
 import Calendar from "../components/dashboard/Calendar.jsx";
 import UpcomingAppointments from "../components/dashboard/UpcomingAppointments.jsx";
 import PatientInfoCard from "../components/dashboard/PatientInfoCard.jsx";
@@ -12,6 +13,7 @@ import VisitHistoryModal from "../components/dashboard/modals/VisitHistoryModal.
 import PaymentHistoryModal from "../components/dashboard/modals/PaymentHistoryModal.jsx";
 
 export default function PatientDashboard({ patientId }) {
+  const navigate = useNavigate();
   const [summary, setSummary] = useState(null);
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -22,17 +24,26 @@ export default function PatientDashboard({ patientId }) {
   const [showVisits, setShowVisits] = useState(false);
   const [showPayments, setShowPayments] = useState(false);
 
+  const logout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/login");
+  };
+
   const load = async () => {
     setLoading(true);
     try {
+      const demoHeaders = getDemoHeaders();
       const [sRes, aRes] = await Promise.all([
-        api.get(`/patients/${patientId}/summary`),
+        api.get(`/patients/${patientId}/summary`, { headers: demoHeaders }),
         api
-          .get(`/appointments`, { params: { patientId } })
+          .get(`/appointments/get-appointment`, { params: { patientId } })
           .catch(() => ({ data: [] })), // safe fallback
       ]);
       setSummary(sRes.data);
       setAppointments(aRes.data || []);
+    } catch (error) {
+      console.error("Error loading patient data:", error);
     } finally {
       setLoading(false);
     }
@@ -67,29 +78,65 @@ export default function PatientDashboard({ patientId }) {
             <span className="font-semibold">Smart Healthcare</span>
           </div>
           <nav className="hidden md:flex gap-6">
-            <a className="hover:underline" href="#">
+            <button
+              onClick={() => navigate("/patient")}
+              className="hover:underline transition-all"
+            >
               Home
-            </a>
-            <a className="hover:underline" href="#">
+            </button>
+            <button
+              onClick={() => navigate("/patient/about")}
+              className="hover:underline transition-all"
+            >
               About
-            </a>
-            <a className="hover:underline" href="#">
+            </button>
+            <button
+              onClick={() => navigate("/patient/appointments")}
+              className="hover:underline transition-all"
+            >
               Appointments
-            </a>
-            <a className="hover:underline" href="#">
-              Payment
-            </a>
+            </button>
+            <button
+              onClick={() => navigate("/patient/payments")}
+              className="hover:underline transition-all"
+            >
+              Payments
+            </button>
           </nav>
-          <button className="px-4 py-1.5 rounded-full bg-[#5b6f59] hover:bg-[#4f614e]">
+          <button
+            onClick={logout}
+            className="px-4 py-1.5 rounded-full bg-[#5b6f59] hover:bg-[#4f614e]"
+          >
             Logout
           </button>
         </div>
       </header>
 
       <main className="max-w-6xl mx-auto px-6 py-6">
-        <h2 className="text-2xl font-semibold text-[#2d3b2b] mb-4">
-          Patient Dashboard
-        </h2>
+        <div className="flex items-center gap-3 mb-4">
+          <button
+            onClick={() => navigate("/patient")}
+            className="flex items-center gap-2 px-4 py-2 text-sm bg-white border border-[#b9c8b4] text-[#2d3b2b] rounded-lg hover:bg-[#f0f5ef] transition-colors"
+          >
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M10 19l-7-7m0 0l7-7m-7 7h18"
+              />
+            </svg>
+            Back to Portal
+          </button>
+          <h2 className="text-2xl font-semibold text-[#2d3b2b]">
+            Patient Dashboard
+          </h2>
+        </div>
 
         {/* layout */}
         <div className="grid grid-cols-12 gap-5">
