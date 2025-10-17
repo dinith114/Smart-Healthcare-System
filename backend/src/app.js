@@ -3,6 +3,7 @@ const insurancePayRoutes = require("./routes/payment/insurancePayRoutes");
 const express = require("express");
 const cors = require("cors");
 const morgan = require("morgan");
+const mongoose = require("mongoose");
 
 // route modules
 const recordsRouter = require("./routes/records");
@@ -51,5 +52,14 @@ app.use((err, req, res, next) => {
   console.error(err);
   res.status(err.status || 500).json({ error: err.message || "Server error" });
 });
+
+const appointmentRoutes = require("./routes/appointment/appointmentRoutes");
+const availabilityRoutes = require("./routes/appointment/availabilityRoutes");
+const userRoutes = require("./routes/userRoutes");
+
+app.use("/api/appointments", appointmentRoutes);
+app.use("/api/auth", authRoutes);   
+app.use("/api/appointments/availability", availabilityRoutes);
+app.use("/api/users", userRoutes);
 
 module.exports = app;

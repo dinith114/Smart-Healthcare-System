@@ -12,6 +12,11 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import StaffDashboard from "./pages/staff/StaffDashboard";
 import PatientPortal from "./pages/patient/PatientPortal";
 
+// pages appointment
+import AppointmentForm from "./pages/appointment/AppointmentForm";
+import AppointmentDetails from "./pages/appointment/AppointmentDetails";
+import AppointmentsPage from "./pages/appointment/AppointmentsPage";
+
 const DEMO_PATIENT_ID = "000000000000000000000001";
 const ROLE = "Provider";
 
@@ -61,13 +66,18 @@ export default function App() {
             path="/records" 
             element={<Records patientId={DEMO_PATIENT_ID} role={ROLE} />} 
           />
+
+          {/* Appointment Routes */}
+            <Route path="/appointments" element={<AppointmentsPage />} />
+            <Route path="/appointments/new" element={<AppointmentForm />} />
+            <Route path="/appointments/:id" element={<AppointmentDetails />} />
           
           {/* Default redirect to login */}
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="*" element={<Navigate to="/login" replace />} />
-            </Routes>
-          </AuthProvider>
-        </ToastProvider>
+        </Routes>
+      </AuthProvider>
+      </ToastProvider>
       </BrowserRouter>
     </ErrorBoundary>
   );

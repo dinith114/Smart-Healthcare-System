@@ -1,12 +1,15 @@
 import axios from "axios";
 
+<<<<<<< Updated upstream
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
+=======
+>>>>>>> Stashed changes
 export const api = axios.create({
-  baseURL: API_URL,
-  timeout: 10000,
+  baseURL: "http://localhost:5000/api", // your backend
 });
 
+<<<<<<< Updated upstream
 // Attach JWT token from localStorage if available
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
@@ -59,3 +62,10 @@ export function getDemoHeaders() {
     "x-provider-consent": DEMO.providerConsent,
   };
 }
+=======
+api.interceptors.request.use((config) => {
+  const t = localStorage.getItem("token");
+  if (t) config.headers.Authorization = `Bearer ${t}`;
+  return config;
+});
+>>>>>>> Stashed changes
