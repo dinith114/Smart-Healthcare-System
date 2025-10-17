@@ -25,6 +25,8 @@ const staffRoutes = require("./routes/staffRoutes");
 const patientRoutes = require("./routes/patientRoutes");
 const healthCardRoutes = require("./routes/healthCardRoutes");
 const billingRoutes = require("./routes/appointment/billingRoutes");
+const availabilityRoutes = require("./routes/appointment/availabilityRoutes");
+const userRoutes = require("./routes/userRoutes");
 
 // Health check
 app.get("/api/health", (_req, res) => res.json({ ok: true }));
@@ -39,6 +41,9 @@ app.use("/api/audit", auditRouter);
 app.use("/api/patients", patientsRouter);
 app.use("/api/appointments", appointmentRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/appointments/availability", availabilityRoutes);
+app.use("/api/billing", billingRoutes);
+app.use("/api/users", userRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/staff", staffRoutes);
 app.use("/api/patient", patientRoutes);
@@ -53,14 +58,5 @@ app.use((err, req, res, next) => {
   console.error(err);
   res.status(err.status || 500).json({ error: err.message || "Server error" });
 });
-
-const availabilityRoutes = require("./routes/appointment/availabilityRoutes");
-const userRoutes = require("./routes/userRoutes");
-
-app.use("/api/appointments", appointmentRoutes);
-app.use("/api/auth", authRoutes);   
-app.use("/api/appointments/availability", availabilityRoutes);
-app.use("/api/billing", billingRoutes);
-app.use("/api/users", userRoutes);
 
 module.exports = app;

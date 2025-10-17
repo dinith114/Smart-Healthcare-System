@@ -1,5 +1,6 @@
 const User = require("../models/userModel");
 const jwt = require("jsonwebtoken");
+const Staff = require("../models/Staff");
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_EXPIRES = process.env.JWT_EXPIRES || "1h";
@@ -44,5 +45,29 @@ exports.login = async (req, res) => {
   } catch (err) {
     console.error("Login error:", err);
     res.status(500).json({ message: "Login failed" });
+  }
+};
+
+// GET /api/users/doctors
+exports.listDoctors = async (_req, res) => {
+  try {
+    // Active staff whose position is "Doctor"
+    const staffDocs = await Staff.find({ position: "Doctor", status: "ACTIVE" })
+      .populate("userId", "username status");
+
+    const doctors = staffDocs
+      .filter(s => s.userId && s.userId.status !== "INACTIVE")
+      .map(s => ({
+        _id: s.userId._id,           // use User _id for appointments
+        username: s.userId.username, // display name/username
+        specialty: s.specialty || "",// <-- key your frontend expects
+        position: s.position,        // "Doctor"
+        email: s.email,
+      }));
+
+    res.json(doctors);
+  } catch (err) {
+    console.error("listDoctors error:", err);
+    res.status(500).json({ message: "Failed to load doctors" });
   }
 };

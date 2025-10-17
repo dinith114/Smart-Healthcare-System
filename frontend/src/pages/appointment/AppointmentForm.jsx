@@ -13,7 +13,7 @@ export default function AppointmentForm() {
   const nav = useNavigate();
   const user = currentUser();
   const [doctors, setDoctors] = useState([]);
-  const [doctorId, setDoctorId] = useState("");
+  const [doctorId, setDoctorId] = useState("");          // keep empty so placeholder shows
   const [date, setDate] = useState("");
   const [notes, setNotes] = useState("");
   const [type, setType] = useState("");
@@ -25,8 +25,8 @@ export default function AppointmentForm() {
   useEffect(() => {
     listDoctors()
       .then((d) => {
-        setDoctors(d);
-        if (d?.length) setDoctorId(d[0]._id);
+        setDoctors(d || []);
+        // ❌ don't preselect a doctor; keep placeholder visible
       })
       .catch(() => setDoctors([]));
   }, []);
@@ -41,34 +41,28 @@ export default function AppointmentForm() {
     }
   }, [doctorId, date]);
 
-  const onSubmit = async (e) => {
-    e.preventDefault();
-    setErr("");
-    
-    if (!user) {
-      setErr("Please login first.");
-      return;
-    }
-    if (!selectedIso) {
-      setErr("Please pick a time slot.");
-      return;
-    }
+  const onSubmit = (e) => {
+  e.preventDefault();
+  setErr("");
 
-    try {
-      setLoading(true);
-      const appt = await createAppointment({
-        patientId: user.userId,
-        doctorId,
-        isoDate: selectedIso,
-        notes: [type, notes].filter(Boolean).join(" — "),
-      });
-      nav(`/appointments/${appt._id}`, { state: { appt } });
-    } catch (e) {
-      setErr(e?.response?.data?.message || "Failed to book");
-    } finally {
-      setLoading(false);
-    }
+  if (!user) return setErr("Please login first.");
+  if (!doctorId) return setErr("Please select a doctor.");
+  if (!selectedIso) return setErr("Please pick a time slot.");
+
+  const doctor = doctors.find((d) => d._id === doctorId) || null;
+
+  // build the draft payload expected by ConfirmAppointment.jsx
+  const draft = {
+    patientId: user.userId,
+    doctorId,
+    doctor,                // so you can show name/specialty there
+    isoDate: selectedIso,  // exact slot
+    type,
+    notes: [type, notes].filter(Boolean).join(" — "),
   };
+
+  nav("/appointments/confirm", { state: { draft } });
+};
 
   const pretty = (iso) => dayjs(iso).format("hh:mm A");
 
@@ -80,7 +74,7 @@ export default function AppointmentForm() {
         transition={{ duration: 0.5 }}
         className="w-full max-w-3xl"
       >
-        {/* Header / Brand (same vibe as Login) */}
+        {/* Header */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -94,12 +88,7 @@ export default function AppointmentForm() {
             className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white/20 mb-3"
           >
             <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M8 7V3m8 4V3M3 11h18M5 19h14a2 2 0 002-2v-6H3v6a2 2 0 002 2z"
-              />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3M3 11h18M5 19h14a2 2 0 002-2v-6H3v6a2 2 0 002 2z" />
             </svg>
           </motion.div>
           <h1 className="text-3xl font-bold text-white">Make Appointment</h1>
@@ -114,7 +103,6 @@ export default function AppointmentForm() {
           className="bg-white rounded-2xl shadow-2xl p-6 md:p-8"
         >
           <form onSubmit={onSubmit} className="grid gap-6">
-            {/* Error box (same style family as Login) */}
             {err && (
               <motion.div
                 initial={{ opacity: 0, y: -6 }}
@@ -129,16 +117,20 @@ export default function AppointmentForm() {
             <div>
               <label className="block text-sm font-medium text-[#2d3b2b] mb-2">Doctor</label>
               <select
-                className="w-full px-4 py-3 border border-[#b9c8b4] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7e957a] focus:border-transparent"
+                className={`w-full px-4 py-3 border border-[#b9c8b4] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7e957a] focus:border-transparent ${
+                doctorId ? "text-[#2d3b2b]" : "text-gray-400"
+                }`}
                 value={doctorId}
                 onChange={(e) => setDoctorId(e.target.value)}
                 disabled={loading}
                 required
               >
+                <option value="" disabled>— Select doctor —</option>
                 {doctors.map((d) => (
                   <option key={d._id} value={d._id}>
                     {d.username}
-                    {d.specialty ? ` — ${d.specialty}` : ""}
+                    {d.position ? ` — ${d.position}` : ""}
+                    {d.specialty ? ` (${d.specialty})` : ""}
                   </option>
                 ))}
               </select>
@@ -149,12 +141,16 @@ export default function AppointmentForm() {
               <label className="block text-sm font-medium text-[#2d3b2b] mb-2">Date</label>
               <input
                 type="date"
-                className="w-full px-4 py-3 border border-[#b9c8b4] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7e957a] focus:border-transparent"
+                placeholder="Select date" // harmless; some browsers ignore for date
+                className={`w-full px-4 py-3 border border-[#b9c8b4] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7e957a] focus:border-transparent ${
+                  date ? "text-[#2d3b2b]" : "text-gray-400"
+                }`}
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
                 disabled={loading}
                 required
               />
+
             </div>
 
             {/* Slots */}
@@ -238,7 +234,7 @@ export default function AppointmentForm() {
           </form>
         </motion.div>
 
-        {/* Footer helper (optional to mirror Login page hierarchy) */}
+        {/* Footer helper */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
